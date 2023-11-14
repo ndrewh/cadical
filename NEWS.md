@@ -7,6 +7,8 @@ Upcoming
 - Making progress to formal 2.0 release with minor fixes for
   different platforms and compilers.
 
+- Refine IPASIR-UP based on feedback from users. 
+
 Version 1.8.0
 -------------
 
