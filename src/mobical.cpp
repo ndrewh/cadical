@@ -222,40 +222,91 @@ class MockPropagator : public ExternalPropagator {
 private:
   Solver *s = 0;
 
-  std::vector<int> clause;
-  std::vector<std::vector<int>> all_external_clauses;
+  // MockPropagator parameters
+  size_t lemma_per_cb = 2;
+  unsigned verbosity = 0;
+  
+  struct ExternalLemma {
+    size_t id;
+    size_t add_count;
+    size_t size;
+    size_t next;
 
-  std::set<int> observed_variables;
-  std::vector<int> new_observed_variables;
-  std::deque<int> added_new_observed_variables;
-  std::deque<std::vector<int>> observed_trail;
-  bool new_ovars = false;
+    bool forgettable;
+    bool tainting;
+    bool propagation_reason;
 
-  size_t nof_clauses = 0;
-  size_t nof_added_clauses = 0;
-  int lemma_count = 0;
+    int literals[]; //variadic size
 
-  std::vector<int> lemmas_per_queries;
+    int * begin () { return literals; }
+    int * end () { return literals + size; }
 
-  // Internal bookkeeping about where are we in the sequence of all lemmas
-  size_t query_loc = 0;
-  size_t lemma_loc = 0;
-  size_t lemma_lit_loc = 0;
+    int next_lit () {
+      if (next < size) return literals[next++];
+      else {
+        next = 0;
+        return 0;
+      }
+    }
+  };
+
+  // The list of all external lemmas (including reason clauses)
+  std::vector<ExternalLemma*> external_lemmas;
+  
+  // The reasons of present external propagations
+  std::map<int, int> reason_map;
+ 
+  // Next lemma to add
+  size_t add_lemma_idx = 0;
+
+  // Forced lemme addition (falsified lemma in model)
   bool must_add_clause = false;
   size_t must_add_idx;
-
+  
+  // Next decision to make
   size_t decision_loc = 0;
 
-  unsigned verbosity = 0;
+  // Observed variables and their current assignments
+  std::set<int> observed_variables;
+  std::vector<int> new_observed_variables;
+  std::deque<std::vector<int>> observed_trail;
+  
+  // Helpers
+  size_t added_lemma_count = 0;
+  size_t nof_clauses = 0;
+  std::vector<int> clause;
+  bool new_ovars = false;
 
-  std::map<int, int> reason_map;
-  std::map<int, size_t> prop_reason_loc;
+  size_t add_new_lemma(bool forgettable) {
+    assert (clause.size() <= (size_t) INT_MAX);
+    assert (external_lemmas.size () <= (size_t) INT_MAX);
+
+    size_t size = clause.size ();
+    size_t bytes = sizeof (struct ExternalLemma) + size * sizeof (int);
+
+    ExternalLemma * lemma = (ExternalLemma*) new char [bytes];
+
+    lemma->id = external_lemmas.size ();
+    lemma->add_count = 0;
+    lemma->size = size;
+    lemma->next = 0;
+    lemma->forgettable = forgettable;
+    lemma->tainting = true;
+    lemma->propagation_reason = false;
+
+    int * q = lemma->literals;
+    for (const auto& lit : clause)
+      *q++ = lit;
+
+    external_lemmas.push_back (lemma);
+
+    return lemma->id;
+  }
 
 public:
   MockPropagator (Solver *solver) {
     observed_trail.push_back (std::vector<int> ());
     s = solver;
-    lemmas_per_queries.push_back (0);
   }
 
   ~MockPropagator () {}
@@ -263,35 +314,23 @@ public:
   /*-----------------functions for mobical -----------------------------*/
   void push_lemma_lit (int lit) {
 
-    clause.push_back (lit);
-    if (!lit) {
+    if (lit) clause.push_back (lit);
+    else {
       nof_clauses++;
-      lemma_count++;
 
       if (verbosity > 2) {
         std::cout << "push lemma to position "
-                  << all_external_clauses.size () << ": ";
+                << external_lemmas.size () << ": ";
         for (auto const &l : clause)
           std::cout << l << " ";
         std::cout << std::endl;
       }
 
-      all_external_clauses.push_back (clause);
+      //add_new_lemma((nof_clauses % 2 == 0));
+      add_new_lemma(true);
       clause.clear ();
-      lemmas_per_queries.back ()++;
-
-      if (lemma_count % 3 == 0) {
-        lemmas_per_queries.push_back (0);
-        lemma_count = 0;
-      }
     }
   }
-
-  // void push_continue () {
-  //   assert (!clause.size ());
-  //   lemmas_per_queries.push_back (lemma_count % 3);
-  //   lemma_count = 0;
-  // }
 
   void add_observed_lit (int lit) {
     // Zero lit indicates that the new observed variables start here
@@ -321,7 +360,7 @@ public:
       observed_variables.insert (lit);
 
       s->add_observed_var (lit);
-      added_new_observed_variables.push_front (lit);
+      
       return lit;
     }
     return 0;
@@ -334,19 +373,14 @@ public:
   /*-----------------functions for mobical ends ------------------------*/
 
   bool cb_check_found_model (const std::vector<int> &model) {
-    // 'all_external_clauses' contains also the propagating (but not
-    // necessarily learnt) clauses. The final solution must satisfy only the
-    // initial input set of clauses.
     if (verbosity > 2)
       std::cout << "cb_check_found_model (" << model.size ()
                 << ") returns: ";
-    assert (model.size () == observed_variables.size ());
-    assert (nof_added_clauses <= nof_clauses);
 
-    for (size_t i = 0; i < nof_clauses; i++) {
+    for (const auto lemma: external_lemmas) {
       bool satisfied = false;
 
-      for (const auto lit : all_external_clauses[i]) {
+      for (const auto lit : *lemma) {
         if (!lit)
           continue; // eoc
 
@@ -362,87 +396,112 @@ public:
       }
 
       if (!satisfied) {
-        // All already added clauses must be satisfied by the model.
-        assert (i >= nof_added_clauses);
-        assert (i < nof_clauses);
+        assert (lemma->add_count == 0 || lemma->forgettable);
 
-        // Ensure that next has_external_clause query returns true.
-        // But this next clause is, on purpose, not necessarily the
-        // unsatisfied one, just simply the next clause.
         must_add_clause = true;
-        must_add_idx = i;
+        must_add_idx = lemma->id;
+
         if (verbosity > 2) {
-          std::cout << "false (external clause  " << i << "/";
-          std::cout << all_external_clauses.size ()
-                    << " is not satisfied: ";
-          for (auto const &l : all_external_clauses[i])
+          std::cout << "false (external clause  " << lemma->id << "/";
+          std::cout << external_lemmas.size ()
+                    << " is not satisfied: (forgettable: "
+                    << lemma->forgettable << ", size: " << lemma->size << "): ";
+          for (auto const &l : *lemma) 
             std::cout << l << " ";
-          std::cout << ")" << std::endl;
+          std::cout << "0" << std::endl;
         }
+
         return false;
       }
     }
+  
     if (verbosity > 2)
       std::cout << "true" << std::endl;
+  
     return true;
   }
 
-  bool cb_has_external_clause () {
+  bool cb_has_external_clause (unsigned& clause_redundancy) {
+    clause_redundancy = 0;
+    
     if (verbosity > 2)
       std::cout << "cb_has_external_clause returns: ";
+    
+    if (added_lemma_count > lemma_per_cb) {
+      added_lemma_count = 0;
+      if (verbosity > 2)
+            std::cout << "false. Lemma per CB treshold reached." << std::endl;
+
+      return false;
+    }
+
+
     add_new_observed_var ();
+
+    if (external_lemmas.empty()) {
+      if (verbosity > 2)
+            std::cout << "false. There are no external lemmas." << std::endl;
+      return false;
+    }
+
     if (must_add_clause) {
-      assert (nof_added_clauses < nof_clauses);
-      if (!lemmas_per_queries[query_loc]) // TODO: bug with ext_prop or
-                                          // reimply?
-        query_loc++;
-      assert (query_loc < lemmas_per_queries.size ());
-      assert (lemmas_per_queries[query_loc] > 0);
-      lemmas_per_queries[query_loc]--;
       must_add_clause = false;
+      add_lemma_idx = must_add_idx;
+
+      if (external_lemmas[must_add_idx]->forgettable)
+        clause_redundancy = 1;
+
       if (verbosity > 2)
-        std::cout << "true (must add clause case)." << std::endl;
+        std::cout << "true. Forced clause addition."
+          << " (forgettable: " << clause_redundancy
+          << " id: " << add_lemma_idx << ")" <<  std::endl;
+      
+      added_lemma_count++;
       return true;
     }
-    if (query_loc >= lemmas_per_queries.size ()) {
-      if (verbosity > 2)
-        std::cout << "false (all lemmas are added already)." << std::endl;
-      return false;
+
+    assert (add_lemma_idx <= external_lemmas.size());
+    
+    while (add_lemma_idx < external_lemmas.size()) {
+      
+      if (!external_lemmas[add_lemma_idx]->add_count &&
+        !external_lemmas[add_lemma_idx]->propagation_reason) {
+
+          if (external_lemmas[add_lemma_idx]->forgettable)
+            clause_redundancy = 1;
+
+          if (verbosity > 2)
+            std::cout << "true. New lemma was found."
+              << " (forgettable: " << clause_redundancy
+              << " id: " << add_lemma_idx << ")" <<  std::endl;
+          
+          added_lemma_count++;
+          return true;
+      }
+
+      // Forgettable lemmas are added repeatedly to the solver only when
+      // the final model falsifies it (recognized in cb_check_final_model).
+
+      add_lemma_idx++;
     }
-    if (lemmas_per_queries[query_loc] > 0) {
-      add_new_observed_var ();
-      lemmas_per_queries[query_loc]--;
-      if (verbosity > 2)
-        std::cout << "true (there is a lemma for this query)." << std::endl;
-      return true;
-    } else {
-      if (query_loc < lemmas_per_queries.size () - 1)
-        query_loc++;
-      if (verbosity > 2)
-        std::cout << "false (all lemmas per this query are added already)."
-                  << std::endl;
-      return false;
-    }
+    
+    if (verbosity > 2)
+      std::cout << "false." << std::endl;
+
+    return false;
   }
 
   int cb_add_external_clause_lit () {
+    int lit = external_lemmas[add_lemma_idx]->next_lit ();
 
-    assert (lemma_loc < all_external_clauses.size ());
-    assert (lemma_lit_loc < all_external_clauses[lemma_loc].size ());
-    if (verbosity > 2 && !lemma_lit_loc) {
-      std::cout << "add external clause " << lemma_loc;
-      std::cout << "/" << all_external_clauses.size () << ": ";
+    if (!lit) {
+      external_lemmas[add_lemma_idx++]->add_count++;
+      if (verbosity > 2)
+        std::cout << "added." << std::endl;
     }
-    int lit = all_external_clauses[lemma_loc][lemma_lit_loc++];
+
     if (verbosity > 2)
       std::cout << lit << " ";
-    if (!lit) {
-      lemma_loc++;
-      lemma_lit_loc = 0;
-      nof_added_clauses++;
-      if (verbosity > 2)
-        std::cout << std::endl;
-    }
 
     return lit;
   }
@@ -487,30 +546,34 @@ public:
 
   int cb_propagate () {
     if (verbosity > 2)
-      std::cout << "cb_propagate " << std::endl;
-    if (observed_trail.size () < 2)
-      return 0;
-    std::set<int> satisfied_literals;
-    std::vector<int> satisfied_literals_ends;
-    size_t lit_sum = 0;
-    int last_lit = 0;
+      std::cout << "cb_propagate ";
+    
+    if (observed_trail.size () < 2) {
+      if (verbosity > 2)
+        std::cout << "0"
+          << " (less than two observed variables are assigned)."
+          << std::endl;
 
-    for (auto level_lits : observed_trail) {
-      for (auto lit : level_lits) {
-        if (!s->observed (lit))
-          continue;
-        satisfied_literals.insert (lit);
-        lit_sum += abs (lit);
-        last_lit = lit;
-        if (!satisfied_literals_ends.size ())
-          satisfied_literals_ends.push_back (lit);
-      }
+      return 0;
+    }
+      
+    size_t lit_sum = 0;  // sum of variables of satisfied observed literals
+    int lowest_lit = 0;  // the lowest satisfied observed literal 
+    int highest_lit = 0; // the highest satisfied observed literal 
+
+    std::set<int> satisfied_literals =
+      current_observed_satisfied_set(lit_sum, lowest_lit, highest_lit);
+    
+    if (satisfied_literals.empty()) {
+      if (verbosity > 2)
+        std::cout << "0"
+          << " (there are no observed satisfied literals)."
+          << std::endl;
+      return 0;
     }
 
-    if (last_lit)
-      satisfied_literals_ends.push_back (last_lit);
-    else
-      return 0;
+    assert (lowest_lit);
+    assert (highest_lit);
 
     int unassigned_var = 0;
     for (auto v : observed_variables) {
@@ -523,53 +586,81 @@ public:
         }
       }
     }
-    if (!unassigned_var)
+
+    if (!unassigned_var) {
+      if (verbosity > 2)
+        std::cout << "0"
+          << " (there are no unassigned observed variables)."
+          << std::endl;
       return 0;
-
-    bool propagated = false;
-    if (lit_sum % 5 == 0 && satisfied_literals.size () > 1) {
-      all_external_clauses.emplace_back (std::initializer_list<int>{
-          unassigned_var, -1 * satisfied_literals_ends.back (),
-          -1 * satisfied_literals_ends.front (), 0});
-      propagated = true;
-    } else if (lit_sum % 7 == 0 && satisfied_literals.size () > 0) {
-      all_external_clauses.emplace_back (std::initializer_list<int>{
-          unassigned_var, -1 * satisfied_literals_ends.back (), 0});
-      propagated = true;
-    } else if (lit_sum % 11 == 0) {
-      all_external_clauses.emplace_back (
-          std::initializer_list<int>{unassigned_var, 0});
-      propagated = true;
-    } else if (lit_sum > 15 && satisfied_literals_ends.size ()) {
-      // test case where a falsified literal is propagated
-      int l1 = -1 * satisfied_literals_ends.back ();
-      int l2 = -1 * satisfied_literals_ends.front ();
-      // It is ok if l1 == l2
-      all_external_clauses.emplace_back (
-          std::initializer_list<int>{l1, l2, 0});
-      reason_map[l1] = all_external_clauses.size () - 1;
-      prop_reason_loc[l1] = 0;
-
-      return l1;
     }
 
-    if (propagated) {
-      reason_map[unassigned_var] = all_external_clauses.size () - 1;
-      prop_reason_loc[unassigned_var] = 0;
-      return unassigned_var;
-    } else
-      return 0;
+    assert (clause.empty());
+    int propagated_lit = 0;
+
+    if (lit_sum % 5 == 0 && satisfied_literals.size () > 1) {
+      clause = { unassigned_var, -1 * lowest_lit, -1 * highest_lit};
+    } else if (lit_sum % 7 == 0 && satisfied_literals.size () > 0) {
+      clause = { unassigned_var, -1 * highest_lit};
+    } else if (lit_sum % 11 == 0) {
+      clause = { unassigned_var };
+    } else if (lit_sum > 15 && lowest_lit) {
+      // Propagate a falsified literal, ok if lowest == highest
+      clause = {-1 * lowest_lit, -1 * highest_lit };
+    }
+
+    if (!clause.empty()) {
+      propagated_lit = clause[0];
+      size_t id = add_new_lemma (true);
+      external_lemmas[id]->propagation_reason = true;
+      reason_map[propagated_lit] = id;
+      clause.clear();
+    }
+
+    if (verbosity > 2)
+      std::cout << propagated_lit
+        << " (there are no unassigned observed variables)."
+        << std::endl;
+
+    return propagated_lit;
+  }
+
+  std::set<int> current_observed_satisfied_set (size_t& lit_sum, int& lowest_lit, int& highest_lit) {
+    
+    lit_sum = 0;
+    lowest_lit = 0;
+    highest_lit = 0;
+    std::set<int> satisfied_literals;
+    
+    for (auto level_lits : observed_trail) {
+      for (auto lit : level_lits) {
+        if (!s->observed (lit))
+          continue;
+
+        satisfied_literals.insert (lit);
+        lit_sum += abs (lit);
+
+        if (!lowest_lit) lowest_lit = lit;
+        highest_lit = lit;
+      }
+    }
+
+    return satisfied_literals;
   }
 
   int cb_add_reason_clause_lit (int plit) {
     assert (reason_map.find (plit) != reason_map.end ());
-    assert (prop_reason_loc[plit] <
-            all_external_clauses[reason_map[plit]].size ());
-    int lit =
-        all_external_clauses[reason_map[plit]][prop_reason_loc[plit]++];
+
+    size_t reason_id = reason_map[plit];
+
+    int lit = external_lemmas[reason_id]->next_lit ();
+
     if (!lit) {
-      prop_reason_loc[plit] = 0; // in case it is needed again
+      external_lemmas[reason_id]->add_count++;
+      if (verbosity > 2)
+        std::cout << "Reason clause " << reason_id << " is added." << std::endl;
     }
+
     return lit;
   }
 
@@ -597,7 +688,17 @@ public:
     assert (observed_trail.size () == 1 ||
             observed_trail.size () >= new_level + 1);
     while (observed_trail.size () > new_level + 1) {
-      observed_trail.pop_back ();
+        // Remove reason clause of backtracked assignments (keep it as lemma)
+        for (auto lit : observed_trail.back()) {  
+          if (reason_map.find (lit) != reason_map.end ()) {
+            size_t reason_id = reason_map[lit];
+            assert (reason_id < external_lemmas.size());
+            external_lemmas[reason_id]->propagation_reason = false;
+            external_lemmas[reason_id]->forgettable = true;
+            reason_map.erase (lit);
+          }
+        }
+        observed_trail.pop_back ();
     }
   }
 };
@@ -1896,13 +1997,13 @@ void Trace::generate_propagator (Random &random, int minvars, int maxvars) {
 void Trace::generate_lemmas (Random &random) {
   if (!observed_vars.size ())
     return;
-  int nof_user_propagation_phases = random.pick_int (3, 7);
+  int nof_user_propagation_phases = random.pick_int (4, 7);
 
   for (int p = 0; p < nof_user_propagation_phases; p++) {
     if (random.generate_double () < 0.05) {
       // push_back (new ContinueCall ());
     } else {
-      const int nof_lemmas = random.pick_int (4, 11);
+      const int nof_lemmas = random.pick_int (5, 11);
       const int ovars = observed_vars.size ();
       for (int i = 0; i < nof_lemmas; i++) {
         // Tiny tiny chance to generate an empty lemma
