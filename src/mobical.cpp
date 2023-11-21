@@ -384,7 +384,7 @@ public:
   /*-----------------functions for mobical ends ------------------------*/
 
   /*-------------------------- observer functions ----------------------*/
-  void notify_fixed_assigment (int lit) {
+  void notify_fixed_assignment (int lit) {
     MLOG ("notify_fixed_assignment: " << lit << std::endl);
 
     assert (std::find(observed_fixed.begin(),observed_fixed.end(), lit) ==
@@ -393,7 +393,7 @@ public:
   };
 
   void add_prev_fixed (const std::vector<int> &fixed_assignments) {
-    for (auto const& lit: fixed_assignments) notify_fixed_assigment (lit);
+    for (auto const& lit: fixed_assignments) notify_fixed_assignment (lit);
   }
 
   /* ------------------------ observer functions end ------------------*/
