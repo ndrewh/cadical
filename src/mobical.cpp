@@ -224,7 +224,7 @@ private:
 
   // MockPropagator parameters
   size_t lemma_per_cb = 2;
-  unsigned verbosity = 0;
+  bool logging = false;
   
   struct ExternalLemma {
     size_t id;
@@ -303,13 +303,25 @@ private:
     return lemma->id;
   }
 
+  // Helper to print very verbose log during debugging
+
+#ifdef LOGGING
+  #define MLOG(str) do { if (logging) std::cout << "[mock-propagator] " << str; } while( false )
+  #define MLOGC(str) do { if (logging) std::cout << str; } while( false )
+#else
+  #define MLOG(str) do { } while ( false )
+  #define MLOGC(str) do { } while ( false )
+#endif
+
+
 public:
   // It is public, so it can be shared easily between different propagators
   std::vector<int> observed_fixed;
 
-  MockPropagator (Solver *solver) {
+  MockPropagator (Solver *solver, bool with_logging = false) {
     observed_trail.push_back (std::vector<int> ());
     s = solver;
+    logging = logging || with_logging;
   }
 
   ~MockPropagator () {}
@@ -320,15 +332,11 @@ public:
     if (lit) clause.push_back (lit);
     else {
       nof_clauses++;
-
-      if (verbosity > 2) {
-        std::cout << "push lemma to position "
-                << external_lemmas.size () << ": ";
-        for (auto const &l : clause)
-          std::cout << l << " ";
-        std::cout << std::endl;
-      }
-
+      
+      MLOG ("push lemma to position " << external_lemmas.size () << ": ");
+      for (auto const &l : clause) MLOGC (l << " ");
+      MLOGC ( "0" << std::endl );
+      
       //add_new_lemma((nof_clauses % 2 == 0));
       add_new_lemma(true);
       clause.clear ();
@@ -377,21 +385,21 @@ public:
 
   /*-------------------------- observer functions ----------------------*/
   void notify_fixed_assigment (int lit) {
+    MLOG ("notify_fixed_assignment: " << lit << std::endl);
+
     assert (std::find(observed_fixed.begin(),observed_fixed.end(), lit) ==
       observed_fixed.end());
     observed_fixed.push_back (lit);
   };
 
   void add_prev_fixed (const std::vector<int> &fixed_assignments) {
-    for(auto const& lit: fixed_assignments) notify_fixed_assigment (lit);
+    for (auto const& lit: fixed_assignments) notify_fixed_assigment (lit);
   }
 
   /* ------------------------ observer functions end ------------------*/
 
   bool cb_check_found_model (const std::vector<int> &model) {
-    if (verbosity > 2)
-      std::cout << "cb_check_found_model (" << model.size ()
-                << ") returns: ";
+    MLOG ("cb_check_found_model (" << model.size () << ") returns: ");
 
     for (const auto lemma: external_lemmas) {
       bool satisfied = false;
@@ -417,22 +425,20 @@ public:
         must_add_clause = true;
         must_add_idx = lemma->id;
 
-        if (verbosity > 2) {
-          std::cout << "false (external clause  " << lemma->id << "/";
-          std::cout << external_lemmas.size ()
-                    << " is not satisfied: (forgettable: "
-                    << lemma->forgettable << ", size: " << lemma->size << "): ";
-          for (auto const &l : *lemma) 
-            std::cout << l << " ";
-          std::cout << "0" << std::endl;
-        }
-
+        
+        MLOGC ("false (external clause  " << lemma->id << "/" 
+              << external_lemmas.size ()
+              << " is not satisfied: (forgettable: "
+              << lemma->forgettable << ", size: " << lemma->size << "): " );
+        for (auto const &l : *lemma) 
+          MLOGC (l << " ");
+        MLOGC (std::endl);
+      
         return false;
       }
     }
   
-    if (verbosity > 2)
-      std::cout << "true" << std::endl;
+    MLOGC( "true" << std::endl );
   
     return true;
   }
@@ -440,14 +446,11 @@ public:
   bool cb_has_external_clause (unsigned& clause_redundancy) {
     clause_redundancy = 0;
     
-    if (verbosity > 2)
-      std::cout << "cb_has_external_clause returns: ";
+    MLOG ("cb_has_external_clause returns: ");
     
     if (added_lemma_count > lemma_per_cb) {
       added_lemma_count = 0;
-      if (verbosity > 2)
-            std::cout << "false. Lemma per CB treshold reached." << std::endl;
-
+      MLOGC( "false (lemma per CB treshold reached)." << std::endl );
       return false;
     }
 
@@ -455,8 +458,7 @@ public:
     add_new_observed_var ();
 
     if (external_lemmas.empty()) {
-      if (verbosity > 2)
-            std::cout << "false. There are no external lemmas." << std::endl;
+       MLOGC( "false (there are no external lemmas)." << std::endl );
       return false;
     }
 
@@ -467,10 +469,9 @@ public:
       if (external_lemmas[must_add_idx]->forgettable)
         clause_redundancy = 1;
 
-      if (verbosity > 2)
-        std::cout << "true. Forced clause addition."
-          << " (forgettable: " << clause_redundancy
-          << " id: " << add_lemma_idx << ")" <<  std::endl;
+       MLOGC( "true (forced clause addition, "
+          << "forgettable: " << clause_redundancy
+          << " id: " << add_lemma_idx << ")." <<  std::endl );
       
       added_lemma_count++;
       return true;
@@ -486,10 +487,9 @@ public:
           if (external_lemmas[add_lemma_idx]->forgettable)
             clause_redundancy = 1;
 
-          if (verbosity > 2)
-            std::cout << "true. New lemma was found."
-              << " (forgettable: " << clause_redundancy
-              << " id: " << add_lemma_idx << ")" <<  std::endl;
+          MLOGC ("true (new lemma was found, "
+              << "forgettable: " << clause_redundancy
+              << " id: " << add_lemma_idx << ")." <<  std::endl );
           
           added_lemma_count++;
           return true;
@@ -501,8 +501,7 @@ public:
       add_lemma_idx++;
     }
     
-    if (verbosity > 2)
-      std::cout << "false." << std::endl;
+    MLOGC( "false." << std::endl );
 
     return false;
   }
@@ -510,24 +509,17 @@ public:
   int cb_add_external_clause_lit () {
     int lit = external_lemmas[add_lemma_idx]->next_lit ();
 
-    if (!lit) {
-      external_lemmas[add_lemma_idx++]->add_count++;
-      if (verbosity > 2)
-        std::cout << "added." << std::endl;
-    }
-
-    if (verbosity > 2)
-      std::cout << lit << " ";
+    if (!lit) external_lemmas[add_lemma_idx++]->add_count++;
+    
+    MLOG ("cb_add_external_clause_lit" << lit << std::endl);
 
     return lit;
   }
 
   int cb_decide () {
-    if (verbosity > 2)
-      std::cout << "cb_decide returns ";
+    MLOG ( "cb_decide returns " );
     if (observed_variables.empty () || observed_variables.size () <= 4) {
-      if (verbosity > 2)
-        std::cout << "0" << std::endl;
+      MLOGC ("0" << std::endl);
       return 0;
     }
 
@@ -535,8 +527,7 @@ public:
         new_observed_variables.size ()) {
       int new_var = add_new_observed_var ();
       if (new_var) {
-        if (verbosity > 2)
-          std::cout << -1 * new_var << std::endl;
+        MLOGC (-1 * new_var << std::endl);
         return -1 * new_var;
       }
     }
@@ -546,29 +537,25 @@ public:
       size_t n = decision_loc / observed_variables.size ();
       if (n < observed_variables.size ()) {
         int lit = *std::next (observed_variables.begin (), n);
-        if (verbosity > 2)
-          std::cout << -1 * lit << std::endl;
+        MLOGC (-1 * lit << std::endl);
+        
         return -1 * lit;
       } else {
-        if (verbosity > 2)
-          std::cout << "0" << std::endl;
+        MLOGC ("0" << std::endl);
         return 0;
       }
     }
-    if (verbosity > 2)
-      std::cout << "0" << std::endl;
+    MLOGC ("0" << std::endl);
     return 0;
   }
 
   int cb_propagate () {
-    if (verbosity > 2)
-      std::cout << "cb_propagate ";
+    MLOG ( "cb_propagate starts" );
     
     if (observed_trail.size () < 2) {
-      if (verbosity > 2)
-        std::cout << "0"
-          << " (less than two observed variables are assigned)."
-          << std::endl;
+      MLOGC( "cb_propagate returns 0"
+        << " (less than two observed variables are assigned)."
+        << std::endl);
 
       return 0;
     }
@@ -581,13 +568,13 @@ public:
       current_observed_satisfied_set(lit_sum, lowest_lit, highest_lit);
     
     if (satisfied_literals.empty()) {
-      if (verbosity > 2)
-        std::cout << "0"
-          << " (there are no observed satisfied literals)."
-          << std::endl;
+      MLOGC( "cb_propagate returns 0"
+        << " (there are no observed satisfied literals)."
+        << std::endl);
       return 0;
     }
 
+    MLOGC (std::endl);
     assert (lowest_lit);
     assert (highest_lit);
 
@@ -604,10 +591,9 @@ public:
     }
 
     if (!unassigned_var) {
-      if (verbosity > 2)
-        std::cout << "0"
-          << " (there are no unassigned observed variables)."
-          << std::endl;
+      MLOG( "cb_propagate returns 0"
+        << " (there are no unassigned observed variables)."
+        << std::endl);
       return 0;
     }
 
@@ -633,10 +619,7 @@ public:
       clause.clear();
     }
 
-    if (verbosity > 2)
-      std::cout << propagated_lit
-        << " (there are no unassigned observed variables)."
-        << std::endl;
+    MLOG( "cb_propagate returns " << propagated_lit << std::endl );
 
     return propagated_lit;
   }
@@ -673,17 +656,15 @@ public:
 
     if (!lit) {
       external_lemmas[reason_id]->add_count++;
-      if (verbosity > 2)
-        std::cout << "Reason clause " << reason_id << " is added." << std::endl;
+      MLOG ( "reason clause (id: " << reason_id << ") is added." << std::endl );
     }
 
     return lit;
   }
 
   void notify_assignment (int lit, bool is_fixed) {
-    if (verbosity > 2)
-      std::cout << "notify assignment: " << lit << " (" << is_fixed << ")"
-                << std::endl;
+    MLOG ( "notify assignment: " << lit << " (" 
+            << is_fixed << ")" << std::endl );
     if (is_fixed) {
       observed_trail.front ().push_back (lit);
     } else {
@@ -692,15 +673,13 @@ public:
   }
 
   void notify_new_decision_level () {
-    if (verbosity > 2)
-      std::cout << "notify new decision level " << std::endl;
+    MLOG ( "notify new decision level " << std::endl );
     observed_trail.push_back (std::vector<int> ());
   }
 
   void notify_backtrack (size_t new_level) {
-    if (verbosity > 2)
-      std::cout << "notify backtrack: " << observed_trail.size () - 1
-                << "->" << new_level << std::endl;
+    MLOG ( "notify backtrack: " << observed_trail.size () - 1
+            << " -> " << new_level << std::endl );
     assert (observed_trail.size () == 1 ||
             observed_trail.size () >= new_level + 1);
     while (observed_trail.size () > new_level + 1) {
@@ -1180,8 +1159,11 @@ struct ConnectCall : public Call {
     MockPropagator *prev_pointer = 0;
     if (mobical.mock_pointer)
       prev_pointer = mobical.mock_pointer;
-
+#ifdef LOGGING
+    mobical.mock_pointer = new MockPropagator (s, mobical.add_set_log_to_true);
+#else
     mobical.mock_pointer = new MockPropagator (s);
+#endif
     s->connect_external_propagator (mobical.mock_pointer);
     s->connect_observer(mobical.mock_pointer);
 
