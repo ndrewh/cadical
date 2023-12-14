@@ -173,4 +173,8 @@ void ccadical_melt (CCaDiCaL *ptr, int lit) {
 int ccadical_frozen (CCaDiCaL *ptr, int lit) {
   return ((Wrapper *) ptr)->solver->frozen (lit);
 }
+int ccadical_flippable (CCaDiCaL *ptr, int lit) {
+  return ((Wrapper *) ptr)->solver->flippable (lit);
+}
+
 }
