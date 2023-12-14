@@ -185,4 +185,8 @@ void ccadical_close_proof (CCaDiCaL *ptr) {
 void ccadical_conclude (CCaDiCaL *ptr) {
   ((Wrapper *) ptr)->solver->conclude ();
 }
+int ccadical_flippable (CCaDiCaL *ptr, int lit) {
+  return ((Wrapper *) ptr)->solver->flippable (lit);
+}
+
 }

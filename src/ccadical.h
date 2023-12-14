@@ -50,6 +50,7 @@ void ccadical_terminate (CCaDiCaL *);
 void ccadical_freeze (CCaDiCaL *, int lit);
 int ccadical_frozen (CCaDiCaL *, int lit);
 void ccadical_melt (CCaDiCaL *, int lit);
+int ccadical_flippable (CCaDiCaL *, int lit);
 int ccadical_simplify (CCaDiCaL *);
 
 /*------------------------------------------------------------------------*/
