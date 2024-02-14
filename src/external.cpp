@@ -564,6 +564,7 @@ void External::mark_nodecide (int elit) {
   int ilit = internalize (elit);
   internal->flags (ilit).nodecide = 1;
   internal->score (ilit) = NODECIDE_SCORE;
+  internal->scores.update (internal->vidx(ilit));
 }
 
 void External::freeze (int elit) {

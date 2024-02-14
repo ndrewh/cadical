@@ -1,7 +1,8 @@
 #ifndef _score_hpp_INCLUDED
 #define _score_hpp_INCLUDED
 
-#define NODECIDE_SCORE 1e150
+// #define NODECIDE_SCORE 1e150
+#define NODECIDE_SCORE 0.0
 
 namespace CaDiCaL {
 
