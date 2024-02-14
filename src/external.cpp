@@ -560,6 +560,12 @@ CaDiCaL::CubesWithStatus External::generate_cubes (int depth,
 
 /*------------------------------------------------------------------------*/
 
+void External::mark_nodecide (int elit) {
+  int ilit = internalize (elit);
+  internal->flags (ilit).nodecide = 1;
+  internal->score (ilit) = NODECIDE_SCORE;
+}
+
 void External::freeze (int elit) {
   reset_extended ();
   int ilit = internalize (elit);

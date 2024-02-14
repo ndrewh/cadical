@@ -1001,6 +1001,12 @@ bool Solver::frozen (int lit) const {
   return res;
 }
 
+void Solver::mark_nodecide (int lit) {
+  TRACE ("mark_nodecide", lit);
+  REQUIRE_VALID_STATE ();
+  external->mark_nodecide (lit);
+}
+
 /*------------------------------------------------------------------------*/
 
 bool Solver::trace_proof (FILE *external_file, const char *name) {

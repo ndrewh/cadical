@@ -51,6 +51,7 @@ void ccadical_freeze (CCaDiCaL *, int lit);
 int ccadical_frozen (CCaDiCaL *, int lit);
 void ccadical_melt (CCaDiCaL *, int lit);
 int ccadical_flippable (CCaDiCaL *, int lit);
+void ccadical_mark_nodecide (CCaDiCaL *, int lit);
 int ccadical_simplify (CCaDiCaL *);
 
 /*------------------------------------------------------------------------*/

@@ -189,4 +189,8 @@ int ccadical_flippable (CCaDiCaL *ptr, int lit) {
   return ((Wrapper *) ptr)->solver->flippable (lit);
 }
 
+void ccadical_mark_nodecide (CCaDiCaL *ptr, int lit) {
+  ((Wrapper *) ptr)->solver->mark_nodecide (lit);
+}
+
 }

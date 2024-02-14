@@ -44,6 +44,7 @@ void Internal::shuffle_scores () {
   score_inc = 0;
   for (const auto &idx : shuffle) {
     stab[idx] = score_inc++;
+    if (ftab[idx].nodecide) stab[idx] = NODECIDE_SCORE;
     scores.push_back (idx);
   }
 }
