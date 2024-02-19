@@ -34,6 +34,11 @@ int Internal::next_decision_variable_with_best_score () {
     (void) scores.pop_front ();
   }
   LOG ("next decision variable %d with score %g", res, score (res));
+  if (flags(res).nodecide) {
+    fprintf (stderr, "next decision variable nodecide %d with score %g\n", res, score (res));
+  } else {
+    fprintf (stderr, "next decision variable %d with score %g\n", res, score (res));
+  }
   return res;
 }
 

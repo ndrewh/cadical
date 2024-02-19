@@ -700,6 +700,10 @@ int Internal::solve (bool preprocess_only) {
       stats.literalsreused += num_assigned - control[1].trail;
     }
   }
+
+  if (opts.shuffleinit)
+    shuffle_scores ();
+
   if (preprocess_only)
     LOG ("internal solving in preprocessing only mode");
   else

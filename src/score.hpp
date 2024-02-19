@@ -2,7 +2,10 @@
 #define _score_hpp_INCLUDED
 
 // #define NODECIDE_SCORE 1e150
-#define NODECIDE_SCORE 0.0
+
+// I think a negative score ensures these vars are lowest?
+// #define NODECIDE_SCORE 1e10
+#define NODECIDE_SCORE -1.0
 
 namespace CaDiCaL {
 

@@ -93,7 +93,7 @@ void Internal::rescale_variable_scores () {
   assert (divider > 0);
   double factor = 1.0 / divider;
   for (auto idx : vars) {
-    if (!ftab[idx].nodecide) stab[idx] *= factor;
+    if (!ftab[idx].nodecide || stab[idx] == NODECIDE_SCORE) stab[idx] *= factor;
   }
   score_inc *= factor;
   PHASE ("rescore", stats.rescored,
@@ -103,7 +103,8 @@ void Internal::rescale_variable_scores () {
 
 void Internal::bump_variable_score (int lit) {
   assert (opts.bump);
-  if (flags(lit).nodecide) return;
+  if (opts.nodecidenobump && flags(lit).nodecide)
+    return;
 
   int idx = vidx (lit);
   double old_score = score (idx);
