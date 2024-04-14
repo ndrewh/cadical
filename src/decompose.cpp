@@ -334,7 +334,7 @@ bool Internal::decompose_round () {
                   learn_empty_clause ();
                   lrat_chain.clear ();
                 } else {
-                  if (abs (other) < abs (repr))
+                  if (decision_group(other) < decision_group(repr) || (decision_group(other) == decision_group(repr) && abs (other) < abs (repr)))
                     repr = other;
 #ifndef QUIET
                   size++;
@@ -720,8 +720,9 @@ bool Internal::decompose_round () {
       continue;
     assert (!flags (other).eliminated ());
     assert (!flags (other).substituted ());
-    if (!flags (other).fixed ())
+    if (!flags (other).fixed ()) {
       mark_substituted (idx);
+    }
   }
 
   delete[] reprs;

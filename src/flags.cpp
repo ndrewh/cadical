@@ -36,6 +36,8 @@ void Internal::mark_eliminated (int lit) {
   stats.active--;
   assert (!active (lit));
   assert (f.eliminated ());
+  if (decision_group(lit) == 0)
+    fprintf(stderr, "mark_eliminated: %d\n", lit);
 }
 
 void Internal::mark_pure (int lit) {
@@ -50,6 +52,8 @@ void Internal::mark_pure (int lit) {
   stats.active--;
   assert (!active (lit));
   assert (f.pure ());
+  if (decision_group(lit) == 0)
+    fprintf(stderr, "mark_pure: %d\n", lit);
 }
 
 void Internal::mark_substituted (int lit) {
@@ -64,6 +68,8 @@ void Internal::mark_substituted (int lit) {
   stats.active--;
   assert (!active (lit));
   assert (f.substituted ());
+  if (decision_group(lit) == 0)
+    fprintf(stderr, "mark_substituted: %d\n", lit);
 }
 
 void Internal::mark_active (int lit) {

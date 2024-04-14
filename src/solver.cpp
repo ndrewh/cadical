@@ -1007,6 +1007,18 @@ void Solver::mark_nodecide (int lit) {
   external->mark_nodecide (lit);
 }
 
+void Solver::set_decision_group (int lit, int decision_group) {
+  TRACE ("set_decision_group", lit);
+  REQUIRE_VALID_STATE ();
+  external->set_decision_group(lit, decision_group);
+}
+
+void Solver::set_decision_group_weight (int decision_group, int weight) {
+  TRACE ("set_decision_group_weight", weight);
+  REQUIRE_VALID_STATE ();
+  external->set_decision_group_weight(decision_group, weight);
+}
+
 /*------------------------------------------------------------------------*/
 
 bool Solver::trace_proof (FILE *external_file, const char *name) {

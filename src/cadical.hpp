@@ -707,6 +707,8 @@ public:
   void freeze (int lit);
   void melt (int lit); // Also needs 'require (frozen (lit))'.
   void mark_nodecide (int lit); //
+  void set_decision_group (int lit, int decision_group); //
+  void set_decision_group_weight (int dg, int weight); //
 
   //------------------------------------------------------------------------
 

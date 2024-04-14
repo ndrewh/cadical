@@ -193,4 +193,12 @@ void ccadical_mark_nodecide (CCaDiCaL *ptr, int lit) {
   ((Wrapper *) ptr)->solver->mark_nodecide (lit);
 }
 
+void ccadical_set_decision_group (CCaDiCaL *ptr, int lit, int decision_group) {
+  ((Wrapper *) ptr)->solver->set_decision_group (lit, decision_group);
+}
+
+void ccadical_set_decision_group_weight (CCaDiCaL *ptr, int dg, int weight) {
+  ((Wrapper *) ptr)->solver->set_decision_group_weight (dg, weight);
+}
+
 }
