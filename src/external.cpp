@@ -305,6 +305,23 @@ void External::unphase (int elit) {
   internal->unphase (ilit);
 }
 
+void External::set_saved_phase (int elit, int val) {
+  assert (elit);
+  assert (elit != INT_MIN);
+  int eidx = abs (elit);
+  if (eidx > max_var) {
+  UNUSED:
+    LOG ("forcing phase of unused external %d ignored", elit);
+    return;
+  }
+  int ilit = e2i[eidx];
+  if (!ilit)
+    goto UNUSED;
+
+  assert(elit > 0); // we don't implement phasing inverted lits -- it's a hard assert instead
+  internal->phases.saved[ilit] = val ? 1 : -1;
+}
+
 /*------------------------------------------------------------------------*/
 
 // External propagation related functions

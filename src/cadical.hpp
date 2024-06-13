@@ -330,6 +330,7 @@ public:
   //   ensure (SATISFIED)
   //
   bool flippable (int lit);
+  void set_saved_phase (int lit, int val);
 
   // Determine whether the valid non-zero literal is in the core.
   // Returns 'true' if the literal is in the core and 'false' otherwise.

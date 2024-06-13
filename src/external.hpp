@@ -341,6 +341,7 @@ struct External {
 
   void phase (int elit);
   void unphase (int elit);
+  void set_saved_phase (int elit, int val);
 
   /*----------------------------------------------------------------------*/
 

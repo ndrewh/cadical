@@ -765,6 +765,14 @@ bool Solver::flippable (int lit) {
   return res;
 }
 
+void Solver::set_saved_phase (int lit, int val) {
+  TRACE ("set_saved_phase", lit);
+  REQUIRE_VALID_STATE ();
+  REQUIRE_VALID_LIT (lit);
+  REQUIRE (lit > 0, "lit > 0");
+  external->set_saved_phase (lit, val);
+}
+
 bool Solver::failed (int lit) {
   TRACE ("failed", lit);
   REQUIRE_VALID_STATE ();

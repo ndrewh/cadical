@@ -189,4 +189,9 @@ int ccadical_flippable (CCaDiCaL *ptr, int lit) {
   return ((Wrapper *) ptr)->solver->flippable (lit);
 }
 
+void ccadical_set_polarity_hint(CCaDiCaL *ptr, int lit, int val) {
+  return ((Wrapper *) ptr)->solver->set_saved_phase (lit, val);
+}
+
+
 }

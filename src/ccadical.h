@@ -52,6 +52,7 @@ int ccadical_frozen (CCaDiCaL *, int lit);
 void ccadical_melt (CCaDiCaL *, int lit);
 int ccadical_flippable (CCaDiCaL *, int lit);
 int ccadical_simplify (CCaDiCaL *);
+void ccadical_set_polarity_hint(CCaDiCaL *, int lit, int val);
 
 /*------------------------------------------------------------------------*/
 
