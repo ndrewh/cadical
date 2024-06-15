@@ -76,6 +76,10 @@ int Internal::decide_phase (int idx, bool target) {
   if (!phase)
     phase = initial_phase;
 
+  // if (flags(idx).has_hint) {
+  //   fprintf(stderr, "decide %d => %d %d\n", idx, phase, flags(idx).has_hint ? 1 : 0);
+  // }
+
   return phase * idx;
 }
 

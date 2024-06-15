@@ -147,14 +147,14 @@ inline void Internal::search_assign (int lit, Clause *reason) {
   set_val (idx, tmp);
   assert (val (lit) > 0);  // Just a bit paranoid but useful.
   assert (val (-lit) < 0); // Ditto.
-  if (!searching_lucky_phases)
+  if (!searching_lucky_phases && !flags(idx).has_hint)
     phases.saved[idx] = tmp; // phase saving during search
   trail.push_back (lit);
 #ifdef LOGGING
   if (!lit_level)
     LOG ("root-level unit assign %d @ 0", lit);
   else
-    LOG (reason, "search assign %d @ %d", lit, lit_level);
+    LOG ("search assign %d @ %d", lit, lit_level);
 #endif
 
   if (watching ()) {
@@ -194,6 +194,11 @@ void Internal::search_assume_decision (int lit) {
 
 void Internal::search_assign_driving (int lit, Clause *c) {
   require_mode (SEARCH);
+  // flags(lit).has_hint = false;
+  // if (c)
+  //   for (int i=0; i<c->size; i++) {
+  //     flags(c->literals[i]).has_hint = false;
+  //   }
   search_assign (lit, c);
   notify_assignments ();
 }

@@ -126,6 +126,13 @@ void Internal::phase (const char *phase, int64_t count, const char *fmt,
   vprintf (fmt, ap);
   va_end (ap);
   fputc ('\n', stdout);
+
+  int hint_count = 0;
+  for (int idx=max_var; idx>0; idx--) {
+    if (flags(idx).has_hint) hint_count++;
+  }
+  printf("hinted: %d / %d\n", hint_count, max_var);
+
   fflush (stdout);
 }
 

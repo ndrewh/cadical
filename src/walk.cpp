@@ -397,8 +397,11 @@ inline void Internal::walk_save_minimum (Walker &walker) {
   stats.walk.minimum = broken;
   for (auto i : vars) {
     const signed char tmp = vals[i];
-    if (tmp)
-      phases.min[i] = phases.saved[i] = tmp;
+    if (tmp) {
+      if (!flags(i).has_hint)
+        phases.saved[i] = tmp;
+      phases.min[i] = tmp;
+    }
   }
 }
 

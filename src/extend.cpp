@@ -130,7 +130,14 @@ void External::extend () {
       continue;
     if (i >= vals.size ())
       vals.resize (i + 1, false);
-    vals[i] = (internal->val (ilit) > 0);
+
+    int ival = internal->val(ilit);
+    if (ival == 0 && internal->flags(ilit).has_hint) {
+      LOG("unassigned, defaulting to saved phase %d %d\n", ilit, internal->phases.saved[internal->vidx(ilit)]);
+      vals[i] = (internal->phases.saved[internal->vidx(ilit)]) > 0;
+    } else {
+      vals[i] = (internal->val (ilit) > 0);
+    }
 #ifndef QUIET
     updated++;
 #endif

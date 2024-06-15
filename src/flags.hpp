@@ -36,6 +36,8 @@ struct Flags { // Variable flags.
   unsigned char assumed : 2;
   unsigned char failed : 2;
 
+  bool has_hint : 1;
+
   enum {
     UNUSED = 0,
     ACTIVE = 1,
@@ -50,7 +52,7 @@ struct Flags { // Variable flags.
   // Initialized explicitly in 'Internal::init' through this function.
   //
   Flags () {
-    seen = keep = poison = removable = shrinkable = added = false;
+    seen = keep = poison = removable = shrinkable = added = has_hint = false;
     subsume = elim = ternary = true;
     block = 3u;
     skip = assumed = failed = decompose = 0;
@@ -73,6 +75,7 @@ struct Flags { // Variable flags.
     dst.subsume = subsume;
     dst.ternary = ternary;
     dst.block = block;
+    dst.has_hint = has_hint;
   }
 };
 

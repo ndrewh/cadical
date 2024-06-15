@@ -118,6 +118,8 @@ void Internal::bump_variable_score (int lit) {
   score (idx) = new_score;
   if (scores.contains (idx))
     scores.update (idx);
+
+  // flags(idx).has_hint = false;
 }
 
 // Important variables recently used in conflict analysis are 'bumped',
@@ -913,7 +915,7 @@ void Internal::analyze () {
       //
       build_chain_for_units (forced, conflict, 0);
 
-      LOG ("forcing %d", forced);
+      LOG ("forcing (chrono) %d", forced);
       search_assign_driving (forced, conflict);
 
       conflict = 0;
@@ -1016,7 +1018,7 @@ void Internal::analyze () {
         UPDATE_AVERAGE (averages.current.level, new_level);
         backtrack (new_level);
 
-        LOG ("forcing %d", forced);
+        LOG ("forcing (2) %d", forced);
         search_assign_driving (forced, conflict);
 
         conflict = 0;
@@ -1139,6 +1141,7 @@ void Internal::analyze () {
   // then lrat_chain is still valid and we will learn a unit or empty clause
   //
   if (uip) {
+    LOG ("forcing uip %d", -uip);
     search_assign_driving (-uip, driving_clause);
   } else
     learn_empty_clause ();
