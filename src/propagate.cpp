@@ -194,10 +194,18 @@ void Internal::search_assume_decision (int lit) {
 
 void Internal::search_assign_driving (int lit, Clause *c) {
   require_mode (SEARCH);
-  // flags(lit).has_hint = false;
+  // // flags(lit).has_hint = false;
+  // internal->score(lit) = 0;
+  // if (internal->scores.contains(internal->vidx(lit))) {
+  //   internal->scores.update(internal->vidx(lit));
+  // }
   // if (c)
   //   for (int i=0; i<c->size; i++) {
-  //     flags(c->literals[i]).has_hint = false;
+  //     // flags(c->literals[i]).as_hint = false;
+  //     internal->score(c->literals[i]) = 0;
+  //     if (internal->scores.contains(internal->vidx(c->literals[i]))) {
+  //       internal->scores.update(internal->vidx(c->literals[i]));
+  //     }
   //   }
   search_assign (lit, c);
   notify_assignments ();

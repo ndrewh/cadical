@@ -92,8 +92,10 @@ void Internal::rescale_variable_scores () {
          max_var, divider);
   assert (divider > 0);
   double factor = 1.0 / divider;
-  for (auto idx : vars)
-    stab[idx] *= factor;
+  for (auto idx : vars) {
+    // if (!flags(idx).has_hint)
+      stab[idx] *= factor;
+  }
   score_inc *= factor;
   PHASE ("rescore", stats.rescored,
          "new score increment %g after %" PRId64 " conflicts", score_inc,

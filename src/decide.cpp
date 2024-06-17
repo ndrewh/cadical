@@ -33,7 +33,8 @@ int Internal::next_decision_variable_with_best_score () {
       break;
     (void) scores.pop_front ();
   }
-  LOG ("next decision variable %d with score %g", res, score (res));
+  // LOGPLS ("next decision variable %d with score %g", res, score (res));
+  // flags(res).has_hint = false;
   return res;
 }
 
@@ -76,9 +77,7 @@ int Internal::decide_phase (int idx, bool target) {
   if (!phase)
     phase = initial_phase;
 
-  // if (flags(idx).has_hint) {
-  //   fprintf(stderr, "decide %d => %d %d\n", idx, phase, flags(idx).has_hint ? 1 : 0);
-  // }
+  // LOGPLS("[%ld] decide %d => %d %d", stats.conflicts, idx, phase, flags(idx).has_hint ? 1 : 0);
 
   return phase * idx;
 }

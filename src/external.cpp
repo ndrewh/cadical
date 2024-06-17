@@ -315,6 +315,7 @@ void External::set_saved_phase (int elit, int val) {
 
   internal->phases.saved[ilit] = val ? 1 : -1;
   internal->flags(ilit).has_hint = true;
+  // internal->score(ilit) = 1e100;
 }
 
 /*------------------------------------------------------------------------*/
