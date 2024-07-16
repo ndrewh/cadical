@@ -12,6 +12,7 @@ Internal::Internal ()
       searching_lucky_phases (false), stable (false), reported (false),
       external_prop (false), did_external_prop (false),
       external_prop_is_lazy (true), rephased (0), vsize (0), max_var (0),
+      max_var_initialized_score(0), max_dgroup(0),
       clause_id (0), original_id (0), reserved_ids (0), conflict_id (0),
       concluded (false), lrat (false), level (0), vals (0), score_inc (1.0),
       scores (this), conflict (0), ignore (0),
@@ -119,6 +120,7 @@ void Internal::enlarge (int new_max_var) {
   enlarge_zero (btab, new_vsize);
   enlarge_zero (gtab, new_vsize);
   enlarge_zero (stab, new_vsize);
+  enlarge_zero (dgtab, new_vsize);
   enlarge_init (ptab, 2 * new_vsize, -1);
   enlarge_only (ftab, new_vsize);
   enlarge_vals (new_vsize);
@@ -157,7 +159,6 @@ void Internal::init_vars (int new_max_var) {
   int old_max_var = max_var;
   max_var = new_max_var;
   init_queue (old_max_var, new_max_var);
-  init_scores (old_max_var, new_max_var);
   int initialized = new_max_var - old_max_var;
   stats.vars += initialized;
   stats.unused += initialized;
@@ -687,6 +688,12 @@ int Internal::local_search () {
 int Internal::solve (bool preprocess_only) {
   assert (clause.empty ());
   START (solve);
+
+  if (max_var_initialized_score < max_var) {
+    init_scores(max_var_initialized_score, max_var);
+    max_var_initialized_score = max_var;
+  }
+
   if (proof)
     proof->solve_query ();
   if (opts.ilb) {
@@ -700,6 +707,10 @@ int Internal::solve (bool preprocess_only) {
       stats.literalsreused += num_assigned - control[1].trail;
     }
   }
+
+  if (opts.shuffleinit)
+    shuffle_scores ();
+
   if (preprocess_only)
     LOG ("internal solving in preprocessing only mode");
   else

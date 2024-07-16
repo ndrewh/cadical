@@ -1,4 +1,5 @@
 #include "internal.hpp"
+#include <set>
 
 namespace CaDiCaL {
 
@@ -94,6 +95,7 @@ void Internal::rescale_variable_scores () {
   double factor = 1.0 / divider;
   for (auto idx : vars) {
     // if (!flags(idx).has_hint)
+    if (!ftab[idx].nodecide || stab[idx] == NODECIDE_SCORE)
       stab[idx] *= factor;
   }
   score_inc *= factor;
@@ -102,8 +104,34 @@ void Internal::rescale_variable_scores () {
          stats.conflicts);
 }
 
+void Internal::rescale_group_scores () {
+  stats.rescored++;
+  double divider = score_inc;
+  for (int i=0; i<max_dgroup; i++) {
+    const double tmp = dgstab[i];
+    if (tmp > divider)
+      divider = tmp;
+  }
+  PHASE ("rescore_groups", stats.rescored, "rescoring %d variable scores by 1/%g",
+         max_var, divider);
+  assert (divider > 0);
+  double factor = 1.0 / divider;
+  for (int i=0; i<max_dgroup; i++) {
+    dgstab[i] *= factor;
+  }
+  PHASE ("rescore_groups", stats.rescored,
+         "new score increment %g after %" PRId64 " conflicts", score_inc,
+         stats.conflicts);
+}
+
 void Internal::bump_variable_score (int lit) {
   assert (opts.bump);
+  if (opts.nodecidenobump && flags(lit).nodecide)
+    return;
+
+  // if (scores.front_group() != decision_group(lit))
+  //   return;
+
   int idx = vidx (lit);
   double old_score = score (idx);
   assert (!evsids_limit_hit (old_score));
@@ -122,6 +150,25 @@ void Internal::bump_variable_score (int lit) {
     scores.update (idx);
 
   // flags(idx).has_hint = false;
+}
+
+void Internal::bump_group_score (int gp) {
+  if (opts.nodecidenobump) return;
+  double old_score = group_score (gp);
+  assert (!evsids_limit_hit (old_score));
+  double new_score = old_score + score_inc;
+
+  if (evsids_limit_hit (new_score)) {
+    LOG ("bumping %g score of %d hits EVSIDS score limit", old_score, idx);
+    rescale_group_scores ();
+    old_score = group_score (gp);
+    assert (!evsids_limit_hit (old_score));
+    new_score = old_score + score_inc;
+  }
+  assert (!evsids_limit_hit (new_score));
+  LOG ("new %g group score of %d", new_score, gp);
+  group_score (gp) = new_score;
+  scores.update_group_score (gp);
 }
 
 // Important variables recently used in conflict analysis are 'bumped',
@@ -195,8 +242,15 @@ void Internal::bump_variables () {
            analyze_bumped_rank (this), analyze_bumped_smaller (this));
   }
 
-  for (const auto &lit : analyzed)
+  std::set<int> decision_groups;
+  for (const auto &lit : analyzed) {
     bump_variable (lit);
+    int gp = decision_group(lit);
+    if (decision_groups.find(gp) == decision_groups.end()) {
+      bump_group_score(gp);
+      decision_groups.insert(gp);
+    }
+  }
 
   if (use_scores ())
     bump_variable_score_inc ();

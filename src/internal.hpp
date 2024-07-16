@@ -176,6 +176,8 @@ struct Internal {
   Reluctant reluctant;        // restart counter in stable mode
   size_t vsize;               // actually allocated variable data size
   int max_var;                // internal maximum variable index
+  int max_var_initialized_score; // internal maximum variable index
+  int max_dgroup; // internal maximum decision group index
   uint64_t clause_id;         // last used id for clauses
   uint64_t original_id;       // ids for original clauses to produce LRAT
   uint64_t reserved_ids;      // number of reserved ids for original clauses
@@ -201,8 +203,10 @@ struct Internal {
   Queue queue;                  // variable move to front decision queue
   Links links;                  // table of links for decision queue
   double score_inc;             // current score increment
-  ScoreSchedule scores;         // score based decision priority queue
+  GroupedScoreSchedule scores;  // score based decision priority queue, decides on higher-weighted groups first
   vector<double> stab;          // table of variable scores [1,max_var]
+  vector<int> dgtab;            // table of decision groups [1,max_var]
+  vector<double> dgstab;        // table of decision group scores [0,max_dg-1]
   vector<Var> vtab;             // variable table [1,max_var]
   vector<int> parents;          // parent literals during probing
   vector<Flags> ftab;           // variable and literal flags
@@ -386,6 +390,8 @@ struct Internal {
   int64_t &bumped (int lit) { return btab[vidx (lit)]; }
   int &propfixed (int lit) { return ptab[vlit (lit)]; }
   double &score (int lit) { return stab[vidx (lit)]; }
+  int decision_group (int lit) { return dgtab[vidx (lit)]; }
+  double &group_score(int dgroup) { return dgstab[dgroup]; }
 
   const Flags &flags (int lit) const { return ftab[vidx (lit)]; }
 
@@ -401,8 +407,10 @@ struct Internal {
   //
   bool use_scores () const { return opts.score && stable; }
   void bump_variable_score (int lit);
+  void bump_group_score (int lit);
   void bump_variable_score_inc ();
   void rescale_variable_scores ();
+  void rescale_group_scores ();
 
   // Marking variables with a sign (positive or negative).
   //
@@ -1462,6 +1470,28 @@ inline bool score_smaller::operator() (unsigned a, unsigned b) {
     return false;
 
   return a > b;
+}
+
+inline bool decision_group_score_smaller::operator() (unsigned a, unsigned b) {
+  assert (0 <= a);
+  assert (a <= (unsigned) internal->max_dgroups);
+  assert (0 <= b);
+  assert (b <= (unsigned) internal->max_dgroups);
+  double s = internal->dgstab[a];
+  double t = internal->dgstab[b];
+
+  if (s < t)
+    return true;
+  if (s > t)
+    return false;
+
+  return a > b;
+}
+
+inline unsigned decision_group_score_smaller::get(unsigned a) const {
+  assert (1 <= a);
+  assert (a <= (unsigned) internal->max_var);
+  return internal->dgtab[a];
 }
 
 /*------------------------------------------------------------------------*/

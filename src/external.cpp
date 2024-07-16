@@ -573,6 +573,40 @@ CaDiCaL::CubesWithStatus External::generate_cubes (int depth,
 
 /*------------------------------------------------------------------------*/
 
+void External::mark_nodecide (int elit) {
+  // fprintf(stderr, "nodecide %d\n", elit);
+  int ilit = internalize (elit);
+  internal->flags (ilit).nodecide = 1;
+  internal->score (ilit) = NODECIDE_SCORE;
+  if (internal->scores.contains(internal->vidx(ilit)))
+    internal->scores.update (internal->vidx(ilit));
+}
+
+void External::set_decision_group (int elit, int decision_group) {
+  // fprintf(stderr, "decision group %d = %d\n", elit, decision_group);
+  int ilit = internalize (elit);
+  if (internal->scores.contains(internal->vidx(ilit)) && internal->dgtab[internal->vidx(ilit)] != decision_group)
+    FATAL ("set_decision_group cannot move variables that already have a score %d", ilit);
+
+  internal->dgtab[internal->vidx(ilit)] = decision_group;
+  if (decision_group > internal->max_dgroup) {
+    internal->max_dgroup = decision_group;
+    internal->dgstab.resize(decision_group+1, 0.0);
+    internal->scores.set_max_decision_group(internal->max_dgroup);
+  }
+}
+
+void External::set_decision_group_weight (int dg, int weight) {
+  if (dg > internal->max_dgroup) {
+    internal->max_dgroup = dg;
+    internal->dgstab.resize(dg+1, 0.0);
+    internal->scores.set_max_decision_group(internal->max_dgroup);
+  }
+
+  internal->dgstab[dg] = weight;
+  internal->scores.update_group_score(dg);
+}
+
 void External::freeze (int elit) {
   reset_extended ();
   int ilit = internalize (elit);

@@ -60,6 +60,7 @@ OPTION( covermaxeff,     1e8,  0,2e9,1,0,1, "maximum cover efficiency") \
 OPTION( coverminclslim,    2,  2,2e9,0,0,1, "minimum clause size") \
 OPTION( covermineff,     1e6,  0,2e9,1,0,1, "minimum cover efficiency") \
 OPTION( coverreleff,       4,  1,1e5,1,0,1, "relative efficiency per mille") \
+OPTION( decisiongroupshuffle,       0,  0,  1,0,0,1, "decision group") \
 OPTION( decompose,         1,  0,  1,0,1,1, "decompose BIG in SCCs and ELS") \
 OPTION( decomposerounds,   2,  1, 16,1,0,1, "number of decompose rounds") \
 OPTION( deduplicate,       1,  0,  1,0,1,1, "remove duplicated binaries") \
@@ -112,6 +113,7 @@ OPTION( lrat,              0,  0,  1,0,0,1, "use LRAT proof format") \
 OPTION( lucky,             1,  0,  1,0,0,1, "search for lucky phases") \
 OPTION( minimize,          1,  0,  1,0,0,1, "minimize learned clauses") \
 OPTION( minimizedepth,   1e3,  0,1e3,0,0,1, "minimization depth") \
+OPTION( nodecidenobump,       0,  0,  1,0,0,1, "vars marked nodecide can never be bumped") \
 OPTION( otfs,              1,  0,  1,0,0,1, "on-the-fly self subsumption") \
 OPTION( phase,             1,  0,  1,0,0,1, "initial phase") \
 OPTION( probe,             1,  0,  1,0,1,1, "failed literal probing" ) \
@@ -150,6 +152,7 @@ OPTION( seed,              0,  0,2e9,0,0,1, "random seed") \
 OPTION( shrink,            3,  0,  3,0,0,1, "shrink conflict clause") \
 OPTION( shrinkreap,        1,  0,  1,0,0,1, "use a reap for shrinking") \
 OPTION( shuffle,           0,  0,  1,0,0,1, "shuffle variables") \
+OPTION( shuffleinit,       0,  0,  1,0,0,1, "shuffle queue before solving") \
 OPTION( shufflequeue,      1,  0,  1,0,0,1, "shuffle variable queue") \
 OPTION( shufflerandom,     0,  0,  1,0,0,1, "not reverse but random") \
 OPTION( shufflescores,     1,  0,  1,0,0,1, "shuffle variable scores") \

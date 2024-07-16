@@ -225,6 +225,9 @@ struct External {
 
   void freeze (int elit);
   void melt (int elit);
+  void mark_nodecide (int elit);
+  void set_decision_group (int elit, int decision_group);
+  void set_decision_group_weight (int dg, int weight);
 
   bool frozen (int elit) {
     assert (elit);
@@ -236,6 +239,8 @@ struct External {
       return false;
     return frozentab[eidx] > 0;
   }
+
+  void aux_variable (int elit);
 
   /*----------------------------------------------------------------------*/
 

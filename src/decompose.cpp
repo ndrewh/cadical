@@ -334,6 +334,7 @@ bool Internal::decompose_round () {
                   learn_empty_clause ();
                   lrat_chain.clear ();
                 } else {
+                  // if (decision_group(other) < decision_group(repr) || (decision_group(other) == decision_group(repr) && abs (other) < abs (repr)))
                   if (abs (other) < abs (repr))
                     repr = other;
 #ifndef QUIET

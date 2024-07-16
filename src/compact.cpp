@@ -459,6 +459,8 @@ void Internal::compact () {
   // pretty complicated and would require that the 'Heap' knows that mapped
   // elements with 'zero' destination should be flushed.
 
+  // fprintf(stderr, "compact\n");
+
   vector<int> saved;
   assert (saved.empty ());
   if (!scores.empty ()) {
@@ -475,6 +477,7 @@ void Internal::compact () {
     scores.erase ();
   }
   mapper.map_vector (stab);
+  mapper.map_vector (dgtab);
   if (!saved.empty ()) {
     for (const auto idx : saved)
       scores.push_back (idx);

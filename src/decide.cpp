@@ -32,9 +32,17 @@ int Internal::next_decision_variable_with_best_score () {
     if (!val (res))
       break;
     (void) scores.pop_front ();
+    // fprintf(stderr, "next decision skip %d with value %d group %d\n", res, val(res), decision_group(res));
   }
   // LOGPLS ("next decision variable %d with score %g", res, score (res));
   // flags(res).has_hint = false;
+
+  // if (flags(res).nodecide) {
+  //   fprintf (stderr, "next decision variable nodecide %d with score %g\n", res, score (res));
+  // } else {
+  //   fprintf (stderr, "next decision variable %d with score %g group %d group score %g\n", res, score (res), decision_group(res), group_score(decision_group(res)));
+  // }
+
   return res;
 }
 

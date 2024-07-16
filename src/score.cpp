@@ -11,11 +11,35 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
        new_max_var);
   for (int i = old_max_var; i < new_max_var; i++)
     scores.push_back (i + 1);
+
+  if (dgstab.size() == 0)
+    dgstab.resize(1, 0);
 }
 
 // Shuffle the EVSIDS heap.
 
 void Internal::shuffle_scores () {
+  if (opts.decisiongroupshuffle) {
+    fprintf(stderr, "decisiongroupshuffle\n");
+    vector<int> shuffle;
+    scores.pop_all_groups(shuffle);
+    Random random (opts.seed); // global seed
+    random += stats.shuffled;  // different every time
+    for (size_t i = 0; i < shuffle.size(); i++) {
+      const int j = random.pick_int (i, shuffle.size()-1);
+      swap (shuffle[i], shuffle[j]);
+    }
+
+    int tmp = 0;
+    for (auto &idx : shuffle) {
+      if (dgstab[idx] <= max_dgroup) // don't reassign manually set scores
+        dgstab[idx] = tmp++;
+    }
+    scores.insert_group_scores(shuffle);
+    stats.shuffled++;
+    // return;
+  }
+
   if (!opts.shuffle)
     return;
   if (!opts.shufflescores)
@@ -44,6 +68,7 @@ void Internal::shuffle_scores () {
   score_inc = 0;
   for (const auto &idx : shuffle) {
     stab[idx] = score_inc++;
+    if (ftab[idx].nodecide) stab[idx] = NODECIDE_SCORE;
     scores.push_back (idx);
   }
 }
