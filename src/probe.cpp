@@ -515,6 +515,7 @@ void Internal::failed_literal (int failed) {
 
   START (analyze);
 
+  VERBOSE (1, "analyzing failed literal probe %d", failed);
   LOG (conflict, "analyzing failed literal conflict");
 
   int uip = 0;

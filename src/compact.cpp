@@ -478,6 +478,7 @@ void Internal::compact () {
   }
   mapper.map_vector (stab);
   mapper.map_vector (dgtab);
+  mapper.map_vector (conflicttab);
   if (!saved.empty ()) {
     for (const auto idx : saved)
       scores.push_back (idx);

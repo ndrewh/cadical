@@ -31,6 +31,7 @@ OPTION( blockmaxclslim,  1e5,  1,2e9,2,0,1, "maximum clause size") \
 OPTION( blockminclslim,    2,  2,2e9,0,0,1, "minimum clause size") \
 OPTION( blockocclim,     1e2,  1,2e9,2,0,1, "occurrence limit") \
 OPTION( bump,              1,  0,  1,0,0,1, "bump variables") \
+OPTION( bumpdecision,       0,  0,  1,0,0,1, "bump decisions") \
 OPTION( bumpreason,        1,  0,  1,0,0,1, "bump reason literals too") \
 OPTION( bumpreasondepth,   1,  1,  3,0,0,1, "bump reason depth") \
 OPTION( check,             0,  0,  1,0,0,0, "enable internal checking") \
@@ -64,6 +65,7 @@ OPTION( decisiongroupshuffle,       0,  0,  1,0,0,1, "decision group") \
 OPTION( decompose,         1,  0,  1,0,1,1, "decompose BIG in SCCs and ELS") \
 OPTION( decomposerounds,   2,  1, 16,1,0,1, "number of decompose rounds") \
 OPTION( deduplicate,       1,  0,  1,0,1,1, "remove duplicated binaries") \
+OPTION( drophintsonconflict,       0,  0,  1,0,0,1, "drop hints on conflict") \
 OPTION( eagersubsume,      1,  0,  1,0,0,1, "subsume recently learned") \
 OPTION( eagersubsumelim,  20,  1,1e3,0,0,1, "limit on subsumed candidates") \
 OPTION( elim,              1,  0,  1,0,1,1, "bounded variable elimination") \
@@ -99,6 +101,7 @@ OPTION( flushfactor,       3,  1,1e3,0,0,1, "interval increase") \
 OPTION( flushint,        1e5,  1,2e9,0,0,1, "initial limit") \
 OPTION( forcephase,        0,  0,  1,0,0,1, "always use initial phase") \
 OPTION( frat,              0,  0,  2,0,0,1, "1=frat(lrat), 2=frat(drat)") \
+OPTION( hintsremoveonconflict,       0,  0,  1,0,0,1, "remove hints on conflict") \
 OPTION( idrup,             0,  0,  1,0,0,1, "incremental proof format") \
 OPTION( ilb,               1,  0,  1,0,0,1, "ILB (incremental lazy backtrack)") \
 OPTION( ilbassumptions,    1,  0,  1,0,0,1, "trail reuse for assumptions (ILB-like)") \
@@ -146,6 +149,7 @@ OPTION( restartreusetrail, 1,  0,  1,0,0,1, "enable trail reuse") \
 OPTION( restoreall,        0,  0,  2,0,0,1, "restore all clauses (2=really)") \
 OPTION( restoreflush,      0,  0,  1,0,0,1, "remove satisfied clauses") \
 OPTION( reverse,           0,  0,  1,0,0,1, "reverse variable ordering") \
+OPTION( reweightonconflict,       0,  0,  1,0,0,1, "reweight on conflict") \
 OPTION( score,             1,  0,  1,0,0,1, "use EVSIDS scores") \
 OPTION( scorefactor,     950,500,1e3,0,0,1, "score factor per mille") \
 OPTION( seed,              0,  0,2e9,0,0,1, "random seed") \

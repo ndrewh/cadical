@@ -188,7 +188,7 @@ void Internal::search_assume_decision (int lit) {
   assert (propagated == trail.size ());
   new_trail_level (lit);
   notify_decision ();
-  LOG ("search decide %d", lit);
+  VERBOSE (1, "search decide %d", lit);
   search_assign (lit, decision_reason);
 }
 

@@ -18,7 +18,7 @@ int Internal::next_decision_variable_on_queue () {
     stats.searched += searched;
     update_queue_unassigned (res);
   }
-  LOG ("next queue decision variable %d bumped %" PRId64 "", res,
+  VERBOSE (1, "next queue decision variable %d group %d bumped %" PRId64 "", res, decision_group(res),
        bumped (res));
   return res;
 }
@@ -42,6 +42,7 @@ int Internal::next_decision_variable_with_best_score () {
   // } else {
   //   fprintf (stderr, "next decision variable %d with score %g group %d group score %g\n", res, score (res), decision_group(res), group_score(decision_group(res)));
   // }
+  VERBOSE (1, "next decision variable %d with score %g group %d group score %g", res, score (res), decision_group(res), group_score(decision_group(res)));
 
   return res;
 }
@@ -147,7 +148,7 @@ int Internal::decide () {
       LOG ("added pseudo decision level");
       notify_decision ();
     } else {
-      LOG ("deciding assumption %d", lit);
+      VERBOSE (1, "deciding assumption %d", lit);
       search_assume_decision (lit);
     }
   } else if ((size_t) level == assumptions.size () && constraint.size ()) {
@@ -218,7 +219,7 @@ int Internal::decide () {
 
       if (unassigned_lit) {
 
-        LOG ("deciding %d to satisfy constraint", unassigned_lit);
+        VERBOSE (1, "deciding %d to satisfy constraint", unassigned_lit);
         search_assume_decision (unassigned_lit);
 
       } else {
@@ -243,6 +244,7 @@ int Internal::decide () {
       const bool target = (opts.target > 1 || (stable && opts.target));
       decision = decide_phase (idx, target);
     }
+    VERBOSE(1, "decision! %d", decision);
     search_assume_decision (decision);
   }
   if (res)

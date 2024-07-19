@@ -121,6 +121,7 @@ void Internal::enlarge (int new_max_var) {
   enlarge_zero (gtab, new_vsize);
   enlarge_zero (stab, new_vsize);
   enlarge_zero (dgtab, new_vsize);
+  enlarge_zero (conflicttab, new_vsize);
   enlarge_init (ptab, 2 * new_vsize, -1);
   enlarge_only (ftab, new_vsize);
   enlarge_vals (new_vsize);
@@ -710,6 +711,8 @@ int Internal::solve (bool preprocess_only) {
 
   if (opts.shuffleinit)
     shuffle_scores ();
+
+  shuffle_queue_dgorder ();
 
   if (preprocess_only)
     LOG ("internal solving in preprocessing only mode");

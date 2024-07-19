@@ -117,7 +117,7 @@ class GroupedScoreSchedule {
 
   void update_group_score (unsigned gp) {
     if (dgs_heap.contains(gp)) {
-      fprintf(stderr, "update_group_score %d\n", gp);
+      // fprintf(stderr, "update_group_score %d\n", gp);
       dgs_heap.update(gp);
     } else {
       fprintf(stderr, "update_group_score fail %d\n", gp);

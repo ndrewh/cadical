@@ -86,7 +86,7 @@ void Internal::backtrack (int new_level) {
 
   const size_t assigned = control[new_level + 1].trail;
 
-  LOG ("backtracking to decision level %d with decision %d and trail %zd",
+  VERBOSE (1, "backtracking to decision level %d with decision %d and trail %zd",
        new_level, control[new_level].decision, assigned);
 
   const size_t end_of_trail = trail.size ();
@@ -131,8 +131,8 @@ void Internal::backtrack (int new_level) {
     }
   }
   trail.resize (j);
-  LOG ("unassigned %d literals %.0f%%", unassigned,
-       percent (unassigned, unassigned + reassigned));
+  // VERBOSE (1, "unassigned %d literals %.0f%%", unassigned,
+  //      percent (unassigned, unassigned + reassigned));
   LOG ("reassigned %d literals %.0f%%", reassigned,
        percent (reassigned, unassigned + reassigned));
 

@@ -57,6 +57,8 @@ struct Queue {
     last = idx;
     l.next = 0;
   }
+
+  void dgorder();
 };
 
 } // namespace CaDiCaL

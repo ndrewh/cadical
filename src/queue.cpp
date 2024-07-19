@@ -85,4 +85,27 @@ void Internal::shuffle_queue () {
   queue.unassigned = queue.last;
 }
 
+void Internal::shuffle_queue_dgorder () {
+  queue.first = queue.last = 0;
+
+  vector <int> shuffle;
+  for (int idx = max_var; idx; idx--) {
+    shuffle.push_back (idx);
+  }
+
+  stable_sort (shuffle.begin(), shuffle.end(), [&](int a, int b) {
+    int dgroupa = decision_group(a);
+    int dgroupb = decision_group(b);
+    return group_score(dgroupa) < group_score(dgroupb);
+  });
+
+  for (const int idx : shuffle)
+    queue.enqueue (links, idx);
+
+  int64_t bumped = queue.bumped;
+  for (int idx = queue.last; idx; idx = links[idx].prev)
+    btab[idx] = bumped--;
+  queue.unassigned = queue.last;
+}
+
 } // namespace CaDiCaL

@@ -16,7 +16,7 @@ namespace CaDiCaL {
 void Internal::learn_empty_clause () {
   assert (!unsat);
   build_chain_for_empty ();
-  LOG ("learned empty clause");
+  VERBOSE (1, "learned empty clause");
   external->check_learned_empty_clause ();
   int64_t id = ++clause_id;
   if (proof) {
@@ -53,6 +53,11 @@ void Internal::bump_queue (int lit) {
   const int idx = vidx (lit);
   if (!links[idx].next)
     return;
+
+  // Do not bump variables that are not in the group used for decisions
+  if (group_score(decision_group(lit)) < group_score(decision_group(queue.unassigned)))
+    return;
+
   queue.dequeue (links, idx);
   queue.enqueue (links, idx);
   assert (stats.bumped != INT64_MAX);
@@ -159,7 +164,7 @@ void Internal::bump_group_score (int gp) {
   double new_score = old_score + score_inc;
 
   if (evsids_limit_hit (new_score)) {
-    LOG ("bumping %g score of %d hits EVSIDS score limit", old_score, idx);
+    LOG ("bumping %g score of %d hits EVSIDS score limit", old_score, gp);
     rescale_group_scores ();
     old_score = group_score (gp);
     assert (!evsids_limit_hit (old_score));
@@ -245,11 +250,41 @@ void Internal::bump_variables () {
   std::set<int> decision_groups;
   for (const auto &lit : analyzed) {
     bump_variable (lit);
-    int gp = decision_group(lit);
-    if (decision_groups.find(gp) == decision_groups.end()) {
-      bump_group_score(gp);
-      decision_groups.insert(gp);
+
+    // TODO: Bump group scores?
+    // int gp = decision_group(lit);
+    // if (decision_groups.find(gp) == decision_groups.end()) {
+    //   bump_group_score(gp);
+    //   decision_groups.insert(gp);
+    // }
+  }
+
+  if (opts.bumpdecision) {
+    VERBOSE(1, "bumping %ld decision variables", levels.size());
+    for (auto it = levels.rbegin(); it != levels.rend(); it++) {
+      bump_variable(control[*it].decision);
     }
+  }
+
+  if (opts.reweightonconflict) {
+    for (const auto &c : analyzed) {
+      if (++conflicttab[vidx(c)] == 100){
+        if (dgtab[vidx(c)] != scores.front_group()) {
+          VERBOSE(1, "reweighting %d => %d", abs(c), scores.front_group());
+          dgtab[vidx(c)] = scores.front_group();
+          if (scores.contains(abs(c)))
+            scores.update(abs(c));
+        }
+      }
+    }
+  }
+
+  if (opts.drophintsonconflict) {
+      for (const auto &lidx : levels) { // levels involved in 1st UIP
+        int decision = control[lidx].decision;
+        VERBOSE(1, "dropping hint on  %d", decision);
+        flags(decision).has_hint = false;
+      }
   }
 
   if (use_scores ())
@@ -1187,6 +1222,12 @@ void Internal::analyze () {
 
   int new_level = determine_actual_backtrack_level (jump);
   UPDATE_AVERAGE (averages.current.level, new_level);
+
+  VERBOSE (1, "analyze conflict -> backtrack to level %d with UIP length %d", new_level, size);
+  if (opts.hintsremoveonconflict)
+    for (int i = 0; i < size; i++) {
+      flags(clause[i]).has_hint = false;
+    }
   backtrack (new_level);
 
   // It should hold that (!level <=> size == 1)

@@ -666,8 +666,10 @@ void Internal::try_to_eliminate_variable (Eliminator &eliminator,
 
   if (!active (pivot))
     return;
-  // if (decision_group(pivot) == 0)
-  //   return;
+
+  if (group_score(decision_group(pivot)) > 0)
+    return;
+
   assert (!frozen (pivot));
 
   // First flush garbage clauses.

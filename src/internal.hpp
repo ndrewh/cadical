@@ -206,6 +206,7 @@ struct Internal {
   GroupedScoreSchedule scores;  // score based decision priority queue, decides on higher-weighted groups first
   vector<double> stab;          // table of variable scores [1,max_var]
   vector<int> dgtab;            // table of decision groups [1,max_var]
+  vector<int> conflicttab;            // table of decision groups [1,max_var]
   vector<double> dgstab;        // table of decision group scores [0,max_dg-1]
   vector<Var> vtab;             // variable table [1,max_var]
   vector<int> parents;          // parent literals during probing
@@ -713,6 +714,7 @@ struct Internal {
   char rephase_walk ();
   void shuffle_scores ();
   void shuffle_queue ();
+  void shuffle_queue_dgorder ();
   void rephase ();
 
   // Lucky feasible case checking.
@@ -1473,10 +1475,8 @@ inline bool score_smaller::operator() (unsigned a, unsigned b) {
 }
 
 inline bool decision_group_score_smaller::operator() (unsigned a, unsigned b) {
-  assert (0 <= a);
-  assert (a <= (unsigned) internal->max_dgroups);
-  assert (0 <= b);
-  assert (b <= (unsigned) internal->max_dgroups);
+  assert (a <= (unsigned) internal->max_dgroup);
+  assert (b <= (unsigned) internal->max_dgroup);
   double s = internal->dgstab[a];
   double t = internal->dgstab[b];
 
