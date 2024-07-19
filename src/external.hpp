@@ -404,6 +404,7 @@ struct External {
   void check_solve_result (int res);
 
   void update_molten_literals ();
+  void auto_init_decision_groups ();
 
   /*----------------------------------------------------------------------*/
 

@@ -1,5 +1,6 @@
 #include "internal.hpp"
 #include <cstdint>
+#include <set>
 
 namespace CaDiCaL {
 
@@ -149,8 +150,8 @@ int External::internalize (int elit) {
 void External::add (int elit) {
   assert (elit != INT_MIN);
   reset_extended ();
-  if (internal->opts.check &&
-      (internal->opts.checkwitness || internal->opts.checkfailed))
+  if (internal->opts.autodecisiongroups || (internal->opts.check &&
+      (internal->opts.checkwitness || internal->opts.checkfailed)))
     original.push_back (elit);
 
   const int ilit = internalize (elit);
@@ -532,10 +533,55 @@ void External::update_molten_literals () {
 int External::solve (bool preprocess_only) {
   reset_extended ();
   update_molten_literals ();
+  if (internal->opts.autodecisiongroups)
+    auto_init_decision_groups();
   int res = internal->solve (preprocess_only);
   check_solve_result (res);
   reset_limits ();
   return res;
+}
+
+void External::auto_init_decision_groups() {
+  // for (int i=1; i <= max_var; i++) {
+  //   set_decision_group(i, 0);
+  // }
+
+  std::set<int> conflict_vars;
+  std::set<int> taint_set;
+  while (conflict_vars.size() < 1000) {
+    bool satisfied = false;
+    bool tainted = false;
+
+    const auto end = original.end ();
+    auto start = original.begin (), i = start;
+    for (; i != end; i++) {
+      int lit = *i;
+      if (!lit) {
+        if (!satisfied || tainted) {
+          for (auto j = start; j != i; j++) {
+            int var = abs(*j);
+            if (conflict_vars.find(var) == conflict_vars.end()) {
+              conflict_vars.insert(var);
+              set_decision_group(var, 1);
+            }
+          }
+        }
+        satisfied = false;
+        tainted = false;
+        start = i + 1;
+      } else if (!tainted && taint_set.find(abs(lit)) != taint_set.end()) {
+        tainted = true;
+      } else if (!satisfied && internal->likely_phase(internalize (abs(lit))) == internalize (lit)) {
+        satisfied = true;
+      }
+    }
+
+    taint_set = conflict_vars; // copy
+  }
+
+  set_decision_group_weight(0, 0);
+  set_decision_group_weight(1, 1000);
+  VERBOSE(1, "auto-initialized decision groups; %ld in conflict", conflict_vars.size());
 }
 
 void External::terminate () { internal->terminate (); }

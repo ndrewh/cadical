@@ -31,7 +31,11 @@ void Internal::learn_empty_clause () {
 
 void Internal::learn_unit_clause (int lit) {
   assert (!unsat);
-  LOG ("learned unit clause %d", lit);
+  if (sign(lit) != sign(phases.saved[vidx (lit)])) {
+    VERBOSE (1, "learned wrong unit clause %d", lit);
+  } else {
+    VERBOSE (1, "learned unit clause %d", lit);
+  }
   external->check_learned_unit_clause (lit);
   int64_t id = ++clause_id;
   const unsigned uidx = vlit (lit);
@@ -55,7 +59,7 @@ void Internal::bump_queue (int lit) {
     return;
 
   // Do not bump variables that are not in the group used for decisions
-  if (group_score(decision_group(lit)) < group_score(decision_group(queue.unassigned)))
+  if (opts.nobumpnondecisions && group_score(decision_group(lit)) < group_score(decision_group(queue.unassigned)))
     return;
 
   queue.dequeue (links, idx);

@@ -25,6 +25,7 @@ OPTION( arena,             1,  0,  1,0,0,1, "allocate clauses in arena") \
 OPTION( arenacompact,      1,  0,  1,0,0,1, "keep clauses compact") \
 OPTION( arenasort,         1,  0,  1,0,0,1, "sort clauses in arena") \
 OPTION( arenatype,         3,  1,  3,0,0,1, "1=clause, 2=var, 3=queue") \
+OPTION( autodecisiongroups, 0,  0,  1,0,0,1, "automatic decison groups") \
 OPTION( binary,            1,  0,  1,0,0,1, "use binary proof format") \
 OPTION( block,             0,  0,  1,0,1,1, "blocked clause elimination") \
 OPTION( blockmaxclslim,  1e5,  1,2e9,2,0,1, "maximum clause size") \
@@ -116,6 +117,7 @@ OPTION( lrat,              0,  0,  1,0,0,1, "use LRAT proof format") \
 OPTION( lucky,             1,  0,  1,0,0,1, "search for lucky phases") \
 OPTION( minimize,          1,  0,  1,0,0,1, "minimize learned clauses") \
 OPTION( minimizedepth,   1e3,  0,1e3,0,0,1, "minimization depth") \
+OPTION( nobumpnondecisions, 0,  0,  1,0,0,1, "don't bump non-decisions") \
 OPTION( otfs,              1,  0,  1,0,0,1, "on-the-fly self subsumption") \
 OPTION( phase,             1,  0,  1,0,0,1, "initial phase") \
 OPTION( probe,             1,  0,  1,0,1,1, "failed literal probing" ) \
@@ -123,6 +125,7 @@ OPTION( probehbr,          1,  0,  1,0,0,1, "learn hyper binary clauses") \
 OPTION( probeint,        5e3,  1,2e9,0,0,1, "probing interval" ) \
 OPTION( probemaxeff,     1e8,  0,2e9,1,0,1, "maximum probing efficiency") \
 OPTION( probemineff,     1e6,  0,2e9,1,0,1, "minimum probing efficiency") \
+OPTION( probeonlydecidable, 0,  0,  1,0,0,1, "probe only decidable variables") \
 OPTION( probereleff,      20,  1,1e5,1,0,1, "relative efficiency per mille") \
 OPTION( proberounds,       1,  1, 16,1,0,1, "probing rounds" ) \
 OPTION( profile,           2,  0,  4,0,0,0, "profiling level") \
