@@ -193,10 +193,6 @@ void ccadical_set_polarity_hint(CCaDiCaL *ptr, int lit, int val) {
   return ((Wrapper *) ptr)->solver->set_saved_phase (lit, val);
 }
 
-// void ccadical_mark_nodecide (CCaDiCaL *ptr, int lit) {
-//   ((Wrapper *) ptr)->solver->mark_nodecide (lit);
-// }
-
 void ccadical_set_decision_group (CCaDiCaL *ptr, int lit, int decision_group) {
   ((Wrapper *) ptr)->solver->set_decision_group (lit, decision_group);
 }

@@ -573,15 +573,6 @@ CaDiCaL::CubesWithStatus External::generate_cubes (int depth,
 
 /*------------------------------------------------------------------------*/
 
-void External::mark_nodecide (int elit) {
-  // fprintf(stderr, "nodecide %d\n", elit);
-  int ilit = internalize (elit);
-  internal->flags (ilit).nodecide = 1;
-  internal->score (ilit) = NODECIDE_SCORE;
-  if (internal->scores.contains(internal->vidx(ilit)))
-    internal->scores.update (internal->vidx(ilit));
-}
-
 void External::set_decision_group (int elit, int decision_group) {
   // fprintf(stderr, "decision group %d = %d\n", elit, decision_group);
   int ilit = internalize (elit);

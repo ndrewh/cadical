@@ -225,7 +225,6 @@ struct External {
 
   void freeze (int elit);
   void melt (int elit);
-  void mark_nodecide (int elit);
   void set_decision_group (int elit, int decision_group);
   void set_decision_group_weight (int dg, int weight);
 

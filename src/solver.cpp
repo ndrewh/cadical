@@ -1009,12 +1009,6 @@ bool Solver::frozen (int lit) const {
   return res;
 }
 
-void Solver::mark_nodecide (int lit) {
-  TRACE ("mark_nodecide", lit);
-  REQUIRE_VALID_STATE ();
-  external->mark_nodecide (lit);
-}
-
 void Solver::set_decision_group (int lit, int decision_group) {
   TRACE ("set_decision_group", lit);
   REQUIRE_VALID_STATE ();

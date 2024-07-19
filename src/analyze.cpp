@@ -99,8 +99,6 @@ void Internal::rescale_variable_scores () {
   assert (divider > 0);
   double factor = 1.0 / divider;
   for (auto idx : vars) {
-    // if (!flags(idx).has_hint)
-    if (!ftab[idx].nodecide || stab[idx] == NODECIDE_SCORE)
       stab[idx] *= factor;
   }
   score_inc *= factor;
@@ -131,9 +129,6 @@ void Internal::rescale_group_scores () {
 
 void Internal::bump_variable_score (int lit) {
   assert (opts.bump);
-  if (opts.nodecidenobump && flags(lit).nodecide)
-    return;
-
   // if (scores.front_group() != decision_group(lit))
   //   return;
 
@@ -158,7 +153,6 @@ void Internal::bump_variable_score (int lit) {
 }
 
 void Internal::bump_group_score (int gp) {
-  if (opts.nodecidenobump) return;
   double old_score = group_score (gp);
   assert (!evsids_limit_hit (old_score));
   double new_score = old_score + score_inc;
