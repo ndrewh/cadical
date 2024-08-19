@@ -52,9 +52,13 @@ int ccadical_frozen (CCaDiCaL *, int lit);
 void ccadical_melt (CCaDiCaL *, int lit);
 int ccadical_flippable (CCaDiCaL *, int lit);
 // void ccadical_mark_nodecide (CCaDiCaL *, int lit);
+
+#define CADICAL_HAS_DECISION_GROUPS 1
 void ccadical_set_decision_group (CCaDiCaL *, int lit, int decision_group);
 void ccadical_set_decision_group_weight (CCaDiCaL *, int dg, int weight);
 int ccadical_simplify (CCaDiCaL *);
+
+#define CADICAL_HAS_HINTS 1
 void ccadical_set_polarity_hint(CCaDiCaL *, int lit, int val);
 
 /*------------------------------------------------------------------------*/
