@@ -1154,7 +1154,7 @@ void Internal::analyze () {
       if (uip == control[level].decision) {
         break;
       }
-      // break;
+      break;
     }
 
     reason = var (uip).reason;
@@ -1188,6 +1188,14 @@ void Internal::analyze () {
       break;
     }
   }
+
+  
+  int levels_bumped = 0;
+  for (auto &l : levels) {
+      analyzed.push_back (control[l].decision);
+  }
+
+  VERBOSE(1, "bumped %d/%d levels", levels_bumped, (int) levels.size());
 
   LOG ("first UIP %d", uip);
   clause.push_back (-uip);
