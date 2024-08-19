@@ -1154,7 +1154,7 @@ void Internal::analyze () {
       if (uip == control[level].decision) {
         break;
       }
-      break;
+      // break;
     }
 
     reason = var (uip).reason;
