@@ -204,6 +204,7 @@ struct Internal {
   Links links;                  // table of links for decision queue
   double score_inc;             // current score increment
   GroupedScoreSchedule scores;  // score based decision priority queue, decides on higher-weighted groups first
+  // ScoreSchedule scores;  // score based decision priority queue, decides on higher-weighted groups first
   vector<double> stab;          // table of variable scores [1,max_var]
   vector<int> dgtab;            // table of decision groups [1,max_var]
   vector<int> conflicttab;            // table of decision groups [1,max_var]

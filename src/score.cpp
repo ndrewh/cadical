@@ -20,24 +20,24 @@ void Internal::init_scores (int old_max_var, int new_max_var) {
 
 void Internal::shuffle_scores () {
   if (opts.decisiongroupshuffle) {
-    fprintf(stderr, "decisiongroupshuffle\n");
-    vector<int> shuffle;
-    scores.pop_all_groups(shuffle);
-    Random random (opts.seed); // global seed
-    random += stats.shuffled;  // different every time
-    for (size_t i = 0; i < shuffle.size(); i++) {
-      const int j = random.pick_int (i, shuffle.size()-1);
-      swap (shuffle[i], shuffle[j]);
-    }
+    assert (false);
+    // fprintf(stderr, "decisiongroupshuffle\n");
+    // vector<int> shuffle;
+    // scores.pop_all_groups(shuffle);
+    // Random random (opts.seed); // global seed
+    // random += stats.shuffled;  // different every time
+    // for (size_t i = 0; i < shuffle.size(); i++) {
+    //   const int j = random.pick_int (i, shuffle.size()-1);
+    //   swap (shuffle[i], shuffle[j]);
+    // }
 
-    int tmp = 0;
-    for (auto &idx : shuffle) {
-      if (dgstab[idx] <= max_dgroup) // don't reassign manually set scores
-        dgstab[idx] = tmp++;
-    }
-    scores.insert_group_scores(shuffle);
-    stats.shuffled++;
-    // return;
+    // int tmp = 0;
+    // for (auto &idx : shuffle) {
+    //   if (dgstab[idx] <= max_dgroup) // don't reassign manually set scores
+    //     dgstab[idx] = tmp++;
+    // }
+    // scores.insert_group_scores(shuffle);
+    // stats.shuffled++;
   }
 
   if (!opts.shuffle)

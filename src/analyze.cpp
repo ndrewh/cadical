@@ -31,7 +31,7 @@ void Internal::learn_empty_clause () {
 
 void Internal::learn_unit_clause (int lit) {
   assert (!unsat);
-  if (sign(lit) != sign(phases.saved[vidx (lit)])) {
+  if (sign(lit) != sign(phases.saved[vidx (lit)]) && flags(lit).has_hint) {
     VERBOSE (1, "learned wrong unit clause %d", lit);
   } else {
     VERBOSE (1, "learned unit clause %d", lit);
@@ -264,18 +264,18 @@ void Internal::bump_variables () {
     }
   }
 
-  if (opts.reweightonconflict) {
-    for (const auto &c : analyzed) {
-      if (++conflicttab[vidx(c)] == 100){
-        if (dgtab[vidx(c)] != scores.front_group()) {
-          VERBOSE(1, "reweighting %d => %d", abs(c), scores.front_group());
-          dgtab[vidx(c)] = scores.front_group();
-          if (scores.contains(abs(c)))
-            scores.update(abs(c));
-        }
-      }
-    }
-  }
+  // if (opts.reweightonconflict) {
+  //   for (const auto &c : analyzed) {
+  //     if (++conflicttab[vidx(c)] == 100){
+  //       if (dgtab[vidx(c)] != scores.front_group()) {
+  //         VERBOSE(1, "reweighting %d => %d", abs(c), scores.front_group());
+  //         dgtab[vidx(c)] = scores.front_group();
+  //         if (scores.contains(abs(c)))
+  //           scores.update(abs(c));
+  //       }
+  //     }
+  //   }
+  // }
 
   if (opts.drophintsonconflict) {
       for (const auto &lidx : levels) { // levels involved in 1st UIP
@@ -1068,6 +1068,9 @@ void Internal::analyze () {
   int resolved = 0; // number of resolution (0 = clause in CNF)
   const bool otfs = opts.otfs;
 
+  std::vector<std::vector<int>> uip_clauses;
+  std::vector<int> uips;
+
   for (;;) {
     antecedent_size = 1; // for uip
     analyze_reason (uip, reason, open, resolvent_size, antecedent_size);
@@ -1144,14 +1147,48 @@ void Internal::analyze () {
       if (var (lit).level == level)
         uip = lit;
     }
-    if (!--open)
+
+    if (!--open) {
+      uip_clauses.push_back(clause);
+      uips.push_back(uip);
+      if (uip == control[level].decision) {
+        break;
+      }
       break;
+    }
+
     reason = var (uip).reason;
     assert (reason != external_reason);
     LOG (reason, "analyzing %d reason", uip);
     assert (resolvent_size);
     --resolvent_size;
   }
+
+  VERBOSE(1, "found %u UIPs, using the last one", uips.size());
+  char buf[1024];
+  char *end = buf + 1024;
+  char *p = buf;
+  for (int i=0; i < (int) uips.size() && p < end; i++) {
+    p += snprintf(p, end - p, "%d (%d) [%d] ", uips[i], decision_group(uips[i]), phases.saved[vidx(uips[i])] != sign(-uips[i]));
+  }
+  if (p >= end)
+    p = end - 1;
+
+  *p = 0;
+  VERBOSE(1, "uips groups: %s", buf);
+
+  uip = uips.front();
+  clause = uip_clauses.front();
+
+  for (int i=0; i<(int)uips.size(); i++) {
+    if (decision_group(uips[i]) == decision_group(queue.unassigned)) {
+    // if (phases.saved[vidx(uips[i])] == sign(-uips[i])) {
+      uip = uips[i];
+      clause = uip_clauses[i];
+      break;
+    }
+  }
+
   LOG ("first UIP %d", uip);
   clause.push_back (-uip);
 
@@ -1236,7 +1273,11 @@ void Internal::analyze () {
   // then lrat_chain is still valid and we will learn a unit or empty clause
   //
   if (uip) {
-    LOG ("forcing uip %d", -uip);
+    if (flags(uip).has_hint && phases.saved[vidx(uip)] != sign(-uip)) {
+      VERBOSE (1, "[c=%ld] forcing wrong uip %d", stats.decisions, -uip);
+    } else {
+      VERBOSE (1, "[c=%ld] forcing uip %d", stats.decisions, -uip);
+    }
     search_assign_driving (-uip, driving_clause);
   } else
     learn_empty_clause ();

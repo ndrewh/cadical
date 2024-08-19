@@ -205,6 +205,9 @@ public:
   iterator end () { return array.end (); }
   const_iterator begin () const { return array.begin (); }
   const_iterator end () const { return array.end (); }
+
+  void update_group_score (int gp) { }
+  void set_max_decision_group (int max_dg) { }
 };
 
 } // namespace CaDiCaL

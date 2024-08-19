@@ -333,6 +333,13 @@ void Internal::assign_original_unit (uint64_t id, int lit) {
   LOG ("original unit assign %d", lit);
   assert (num_assigned == trail.size () || level);
   mark_fixed (lit);
+
+  if (sign(lit) != sign(phases.saved[vidx (lit)]) && flags(lit).has_hint) {
+    VERBOSE (1, "learned wrong unit (original) clause %d", lit);
+  } else {
+    VERBOSE (1, "learned unit (original) clause %d", lit);
+  }
+
   if (level)
     return;
   if (propagate ())

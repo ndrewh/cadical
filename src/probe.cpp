@@ -663,8 +663,8 @@ void Internal::generate_probes () {
     if (propfixed (probe) >= stats.all.fixed)
       continue;
 
-    if (opts.probeonlydecidable && decision_group(probe) != scores.front_group())
-      continue;
+    // if (opts.probeonlydecidable && decision_group(probe) != scores.front_group())
+    //   continue;
 
     LOG ("scheduling probe %d negated occs %" PRId64 "", probe,
          noccs (-probe));

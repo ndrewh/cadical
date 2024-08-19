@@ -157,6 +157,12 @@ inline void Internal::search_assign (int lit, Clause *reason) {
     LOG ("search assign %d @ %d", lit, lit_level);
 #endif
 
+  // if (flags(idx).has_hint && phases.saved[idx] != tmp) {
+  //   VERBOSE (1, "hint %d contradicted", lit);
+  //   // trap
+  //   *(volatile int *)0 = 0;
+  // }
+
   if (watching ()) {
     const Watches &ws = watches (-lit);
     if (!ws.empty ()) {
