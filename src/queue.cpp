@@ -86,18 +86,17 @@ void Internal::shuffle_queue () {
 }
 
 void Internal::shuffle_queue_dgorder () {
-  queue.first = queue.last = 0;
-
   vector <int> shuffle;
-  for (int idx = max_var; idx; idx--) {
+  for (int idx = queue.first; idx; idx = links[idx].next)
     shuffle.push_back (idx);
-  }
 
   stable_sort (shuffle.begin(), shuffle.end(), [&](int a, int b) {
     int dgroupa = decision_group(a);
     int dgroupb = decision_group(b);
     return group_score(dgroupa) < group_score(dgroupb);
   });
+
+  queue.first = queue.last = 0;
 
   for (const int idx : shuffle)
     queue.enqueue (links, idx);
