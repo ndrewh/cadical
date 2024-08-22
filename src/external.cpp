@@ -640,6 +640,10 @@ void External::set_decision_group_weight (int dg, int weight) {
     internal->scores.set_max_decision_group(internal->max_dgroup);
   }
 
+
+  if (internal->dgstab.size() == 0)
+    internal->dgstab.resize(1, 0);
+
   internal->dgstab[dg] = weight;
   internal->scores.update_group_score(dg);
 }
