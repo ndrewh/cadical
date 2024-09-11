@@ -106,6 +106,7 @@ OPTION( hintsremoveonconflict,       0,  0,  1,0,0,1, "remove hints on conflict"
 OPTION( idrup,             0,  0,  1,0,0,1, "incremental proof format") \
 OPTION( ilb,               1,  0,  1,0,0,1, "ILB (incremental lazy backtrack)") \
 OPTION( ilbassumptions,    1,  0,  1,0,0,1, "trail reuse for assumptions (ILB-like)") \
+OPTION( initqueuedgorder, 0,  0,  1,0,0,1, "initialize the variable queue based on decision groups") \
 OPTION( inprocessing,      1,  0,  1,0,0,1, "enable inprocessing") \
 OPTION( instantiate,       0,  0,  1,0,1,1, "variable instantiation") \
 OPTION( instantiateclslim, 3,  2,2e9,0,0,1, "minimum clause size") \

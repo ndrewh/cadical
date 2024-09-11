@@ -712,7 +712,8 @@ int Internal::solve (bool preprocess_only) {
   if (opts.shuffleinit)
     shuffle_scores ();
 
-  shuffle_queue_dgorder ();
+  if (opts.initqueuedgorder)
+    shuffle_queue_dgorder ();
 
   if (preprocess_only)
     LOG ("internal solving in preprocessing only mode");
