@@ -1154,7 +1154,8 @@ void Internal::analyze () {
       if (uip == control[level].decision) {
         break;
       }
-      break;
+      if (!opts.uipdecisions)
+        break;
     }
 
     reason = var (uip).reason;
@@ -1181,7 +1182,7 @@ void Internal::analyze () {
   clause = uip_clauses.front();
 
   for (int i=0; i<(int)uips.size(); i++) {
-    if (decision_group(uips[i]) == decision_group(queue.unassigned)) {
+    if (group_score(decision_group(uips[i])) > group_score(decision_group(uip))) {
     // if (phases.saved[vidx(uips[i])] == sign(-uips[i])) {
       uip = uips[i];
       clause = uip_clauses[i];
