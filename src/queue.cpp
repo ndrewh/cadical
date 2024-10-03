@@ -102,7 +102,6 @@ void Internal::shuffle_queue_dgorder () {
 
   for (const int idx : shuffle) {
     queue.enqueue (links, idx);
-    // btab[idx] = ++stats.bumped;
   }
 
   int64_t bumped = queue.bumped;
@@ -110,7 +109,6 @@ void Internal::shuffle_queue_dgorder () {
     btab[idx] = bumped--;
 
   queue.unassigned = queue.last;
-  // queue.bumped = btab[queue.last];
 }
 
 } // namespace CaDiCaL
